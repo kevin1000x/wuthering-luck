@@ -1,0 +1,466 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ww-dark: #1a1a1a;
+  --ww-darker: #0d0d0d;
+  --ww-black: #000000;
+  --ww-gold: #d4af37;
+  --ww-gold-light: #f4e5b0;
+  --ww-purple: #9b59b6;
+  --ww-purple-light: #c39bd3;
+  --ww-blue: #3498db;
+  --ww-gray: #2d2d2d;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* ==================== 沉浸式背景 ==================== */
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  /* 背景图片 + 渐变叠加层 */
+  background:
+    /* 顶部金色微光 */
+    radial-gradient(ellipse 100% 40% at 50% -10%, rgba(212, 175, 55, 0.12) 0%, transparent 50%),
+    /* 右下紫色微光 */
+    radial-gradient(ellipse 50% 50% at 90% 90%, rgba(155, 89, 182, 0.08) 0%, transparent 40%),
+    /* 左下蓝色微光 */
+    radial-gradient(ellipse 40% 40% at 10% 85%, rgba(52, 152, 219, 0.06) 0%, transparent 40%),
+    /* 深色遮罩层 - 让背景图不会太亮 */
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.8) 100%),
+    /* 背景图片 */
+    url('/bg.png');
+  background-size: cover, cover, cover, cover, cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* 噪点纹理覆盖层 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* 无音区波纹线条 */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg,
+      transparent,
+      transparent 100px,
+      rgba(212, 175, 55, 0.02) 100px,
+      rgba(212, 175, 55, 0.02) 101px),
+    repeating-linear-gradient(90deg,
+      transparent,
+      transparent 150px,
+      rgba(155, 89, 182, 0.015) 150px,
+      rgba(155, 89, 182, 0.015) 151px);
+}
+
+/* Rajdhani 字体 - 数字和标题 */
+.font-display {
+  font-family: var(--font-rajdhani), 'Rajdhani', sans-serif;
+}
+
+/* ==================== 玻璃拟态容器 ==================== */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-card-dark {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.glass-card-gold {
+  background: rgba(212, 175, 55, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow:
+    0 4px 30px rgba(212, 175, 55, 0.1),
+    inset 0 1px 0 rgba(212, 175, 55, 0.1);
+}
+
+/* ==================== 金色强调效果 ==================== */
+.gold-title {
+  color: #d4af37;
+  text-shadow:
+    0 0 10px rgba(212, 175, 55, 0.5),
+    0 0 20px rgba(212, 175, 55, 0.3),
+    0 0 30px rgba(212, 175, 55, 0.2);
+}
+
+.gold-glow {
+  animation: pulseGold 2s ease-in-out infinite;
+  background: linear-gradient(135deg, #d4af37 0%, #f4e5b0 50%, #d4af37 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.6));
+}
+
+@keyframes pulseGold {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.6));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.9));
+  }
+}
+
+/* 金色数字强调 */
+.gold-number {
+  color: #d4af37;
+  text-shadow:
+    0 0 8px rgba(212, 175, 55, 0.4),
+    0 0 16px rgba(212, 175, 55, 0.2);
+  font-weight: 700;
+}
+
+/* ==================== 5星卡片金色呼吸发光 ==================== */
+.card-gold-pulse {
+  animation: cardGoldPulse 2s ease-in-out infinite;
+}
+
+@keyframes cardGoldPulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 10px #d4af37,
+      0 0 20px #d4af37aa,
+      0 0 30px #d4af3766,
+      inset 0 0 15px #d4af3733;
+  }
+
+  50% {
+    box-shadow:
+      0 0 20px #d4af37,
+      0 0 40px #d4af37aa,
+      0 0 60px #d4af3766,
+      inset 0 0 25px #d4af3744;
+  }
+}
+
+/* 4星卡片紫色微光 */
+.card-purple-glow {
+  animation: cardPurpleGlow 3s ease-in-out infinite;
+}
+
+@keyframes cardPurpleGlow {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px #9b59b6,
+      0 0 16px #9b59b688,
+      inset 0 0 10px #9b59b622;
+  }
+
+  50% {
+    box-shadow:
+      0 0 15px #9b59b6,
+      0 0 25px #9b59b688,
+      inset 0 0 15px #9b59b633;
+  }
+}
+
+/* 3星卡片静态效果 */
+.card-blue-static {
+  box-shadow: 0 0 8px #3498db44;
+}
+
+/* ==================== 波形线条装饰 ==================== */
+.wave-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.wave-line::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 200%;
+  height: 2px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.6) 25%,
+      rgba(212, 175, 55, 0.8) 50%,
+      rgba(212, 175, 55, 0.6) 75%,
+      transparent 100%);
+  animation: waveFlow 4s ease-in-out infinite;
+}
+
+@keyframes waveFlow {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+/* ==================== 卡片悬浮效果 ==================== */
+.card-hover {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+/* ==================== 输入框科技风格 ==================== */
+.tech-input {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.tech-input:focus {
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow:
+    0 0 20px rgba(212, 175, 55, 0.2),
+    inset 0 0 10px rgba(212, 175, 55, 0.05);
+  outline: none;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.tech-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ==================== 按钮科技风格 ==================== */
+.tech-button {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.tech-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.tech-button:hover::before {
+  left: 100%;
+}
+
+.tech-button:hover {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.1) 100%);
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow:
+    0 0 30px rgba(212, 175, 55, 0.3),
+    inset 0 0 20px rgba(212, 175, 55, 0.1);
+  transform: translateY(-2px);
+}
+
+/* ==================== 闪光效果 ==================== */
+.shimmer-gold {
+  background: linear-gradient(-45deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(244, 229, 176, 0.6) 50%,
+      transparent 60%,
+      transparent 100%);
+  background-size: 300% 300%;
+  animation: shimmerGold 2s ease-in-out infinite;
+}
+
+@keyframes shimmerGold {
+  0% {
+    background-position: 100% 100%;
+  }
+
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+.shimmer-purple {
+  background: linear-gradient(-45deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(195, 155, 211, 0.4) 50%,
+      transparent 60%,
+      transparent 100%);
+  background-size: 300% 300%;
+  animation: shimmerPurple 3s ease-in-out infinite;
+}
+
+@keyframes shimmerPurple {
+  0% {
+    background-position: 100% 100%;
+  }
+
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+.shimmer-effect {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.3) 50%,
+      transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ==================== 星级显示 ==================== */
+.star-5 {
+  color: #d4af37;
+  text-shadow: 0 0 10px #d4af37;
+}
+
+.star-4 {
+  color: #9b59b6;
+  text-shadow: 0 0 8px #9b59b6;
+}
+
+.star-3 {
+  color: #3498db;
+}
+
+/* ==================== 滚动条美化 ==================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.4);
+}
+
+/* ==================== recharts 自定义样式 ==================== */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.05);
+}
+
+.recharts-text {
+  fill: rgba(255, 255, 255, 0.5);
+}
+
+/* ==================== 动画 ==================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* 粒子漂浮效果 */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* ==================== 分隔线 ==================== */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.3) 20%,
+      rgba(212, 175, 55, 0.5) 50%,
+      rgba(212, 175, 55, 0.3) 80%,
+      transparent 100%);
+}
