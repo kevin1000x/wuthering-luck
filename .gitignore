@@ -1,1 +1,15 @@
+# 依赖包
 node_modules/
+
+# Next.js 编译缓存 (这是导致你警告的原因)
+.next/
+out/
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 系统垃圾文件
+.DS_Store
+Thumbs.db
