@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Minus, Zap, Target, BarChart3, MapPin, Navigation } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Zap, BarChart3, MapPin, Navigation } from 'lucide-react';
 import { WutheringElement } from '@/lib/dailyLuck';
 
 interface ROIAnalysisProps {
@@ -270,7 +270,7 @@ const LUCKY_LOCATIONS: Record<WutheringElement, {
     },
 };
 
-export default function ROIAnalysis({ score, userId, luckyElement }: ROIAnalysisProps) {
+export default function ROIAnalysis({ score, luckyElement }: ROIAnalysisProps) {
     // 计算ROI
     const calculateROI = (score: number): number => {
         if (score >= 90) return 180 + (score - 90) * 12;
