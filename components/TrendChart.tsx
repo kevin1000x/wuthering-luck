@@ -17,7 +17,13 @@ interface TrendChartProps {
 }
 
 // 自定义 Tooltip
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{ value: number }>;
+    label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
         const score = payload[0].value;
         const isHigh = score >= 75;
@@ -38,7 +44,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 // 自定义数据点
-const CustomDot = (props: any) => {
+interface DotProps {
+    cx?: number;
+    cy?: number;
+    payload?: TrendDataPoint;
+}
+
+const CustomDot = (props: DotProps) => {
     const { cx, cy, payload } = props;
     const isToday = payload.label === '今天';
     const score = payload.score;
@@ -61,7 +73,12 @@ const CustomDot = (props: any) => {
 };
 
 // 悬停时发光点
-const CustomActiveDot = (props: any) => {
+interface ActiveDotProps {
+    cx?: number;
+    cy?: number;
+}
+
+const CustomActiveDot = (props: ActiveDotProps) => {
     const { cx, cy } = props;
     return (
         <g>
