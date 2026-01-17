@@ -5,7 +5,6 @@ import { WutheringElement } from '@/lib/dailyLuck';
 
 interface ROIAnalysisProps {
     score: number;
-    userId: string;
     luckyElement: WutheringElement;
 }
 

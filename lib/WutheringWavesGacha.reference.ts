@@ -728,6 +728,8 @@ export {
     printDailyFortune,
 };
 
-// 直接运行测试
-testSimulation();
-testDailyFortune();
+// 测试函数 - 仅在直接运行此文件时执行
+// 要运行测试，请使用: node -r ts-node/register lib/WutheringWavesGacha.reference.ts
+// 或取消下面注释：
+// testSimulation();
+// testDailyFortune();
