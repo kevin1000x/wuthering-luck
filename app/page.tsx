@@ -19,6 +19,7 @@ import PullResults from '@/components/PullResults';
 import WaveDecoration from '@/components/WaveDecoration';
 import ROIAnalysis from '@/components/ROIAnalysis';
 import ShareCard from '@/components/ShareCard';
+import Navbar from '@/components/Navbar';
 
 // 属性图标映射
 const elementIcons: Record<WutheringElement, React.ReactNode> = {
@@ -49,7 +50,17 @@ export default function Home() {
     const [showResults, setShowResults] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [currentPage, setCurrentPage] = useState('home');
     const shareCardRef = useRef<HTMLDivElement>(null);
+
+    // 处理导航切换
+    const handleNavigate = (pageId: string) => {
+        setCurrentPage(pageId);
+        // 目前只有首页功能，其他页面后续扩展
+        if (pageId === 'home') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
 
     // UID验证 - 必须是6-12位纯数字
     const validateUid = (value: string): boolean => {
@@ -86,7 +97,7 @@ export default function Home() {
 
         // 模拟加载动画
         setTimeout(() => {
-            const fortuneData = getDailyFortune(uid.trim(), nickname.trim() || undefined);
+            const fortuneData = getDailyFortune(uid.trim());
             const trend = generateTrendData(uid.trim());
 
             setFortune(fortuneData);
@@ -157,6 +168,9 @@ export default function Home() {
 
     return (
         <main className="min-h-screen relative overflow-hidden">
+            {/* 导航栏 */}
+            <Navbar currentPage={currentPage} onNavigate={handleNavigate} />
+
             {/* 背景波形装饰 */}
             <WaveDecoration />
 
@@ -168,8 +182,8 @@ export default function Home() {
                     pullStats={pullStats}
                 />
             )}
-            {/* 主内容区域 */}
-            <div className="relative z-10 max-w-6xl mx-auto px-4 py-12">
+            {/* 主内容区域 - 添加顶部间距以容纳固定导航栏 */}
+            <div className="relative z-10 max-w-6xl mx-auto px-4 pt-24 pb-12">
                 {/* Header */}
                 <header className="text-center mb-16 animate-fade-in-up">
                     {/* 顶部装饰线 */}

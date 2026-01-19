@@ -464,3 +464,21 @@ body::after {
       rgba(212, 175, 55, 0.3) 80%,
       transparent 100%);
 }
+
+/* ==================== 导航栏动画 ==================== */
+@keyframes wave {
+
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* 导航栏下方内容间距 */
+.navbar-offset {
+  padding-top: 80px;
+}

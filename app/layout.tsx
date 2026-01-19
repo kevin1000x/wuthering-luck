@@ -16,6 +16,7 @@ const rajdhani = Rajdhani({
 export const metadata: Metadata = {
     title: '鸣潮运势检测器 | Wuthering Waves Fortune Detector',
     description: '检测你在《鸣潮》中今日的抽卡运势，获取幸运属性和模拟三十连结果',
+    keywords: ['鸣潮', 'Wuthering Waves', '抽卡', '运势', '模拟器'],
 };
 
 export default function RootLayout({
