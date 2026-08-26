@@ -52,6 +52,8 @@ interface DotProps {
 
 const CustomDot = (props: DotProps) => {
     const { cx, cy, payload } = props;
+    // recharts 类型上允许 payload 为空，空值时不渲染
+    if (!payload) return null;
     const isToday = payload.label === '今天';
     const score = payload.score;
 

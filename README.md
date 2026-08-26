@@ -15,7 +15,7 @@
 ### 🎯 核心功能
 - **每日运势检测**: 基于 UID 和日期生成确定性运势分数（0-100）
 - **幸运属性推荐**: 为每日推荐最幸运的元素属性（热熔、衍射、气动、冷凝、导电、湮灭）
-- **模拟抽卡**: 30 连抽卡模拟，展示可能的抽卡结果（不消耗真实资源）
+- **模拟抽卡**: 70 连抽卡模拟，命中结果带角色名称与立绘展示（不消耗真实资源）
 - **运势趋势图**: 显示过去 2 天、今天和未来 4 天的运势走势
 - **ROI 分析**: 根据运势分数评估今日抽卡的投资回报率建议
 
@@ -87,25 +87,26 @@ npm run lint     # 运行 ESLint 代码检查
 ```
 wuthering-luck/
 ├── app/                      # Next.js App Router 页面
-│   ├── globals.css          # 全局样式
+│   ├── globals.css          # 全局样式（鸣潮主题 + 动画，背景用 bg.webp）
 │   ├── layout.tsx           # 根布局
-│   └── page.tsx             # 主页面
+│   └── page.tsx             # 主页面（UID 输入 + 运势仪表盘）
 ├── components/              # React 组件
+│   ├── Navbar.tsx           # 导航栏
 │   ├── ScoreDisplay.tsx     # 运势分数显示
 │   ├── TrendChart.tsx       # 趋势图表
-│   ├── PullResults.tsx      # 抽卡结果显示
-│   ├── ROIAnalysis.tsx      # ROI 分析
+│   ├── PullResults.tsx      # 抽卡结果卡片（角色立绘 + 渐变占位）
+│   ├── ROIAnalysis.tsx      # ROI 分析 + 玄学抽卡地点
 │   ├── ShareCard.tsx        # 分享卡片
 │   └── WaveDecoration.tsx   # 波浪装饰
 ├── lib/                     # 工具库
-│   ├── dailyLuck.ts         # 每日运势核心逻辑
-│   └── WutheringWavesGacha.reference.ts  # 抽卡机制参考实现
-├── public/                  # 静态资源
-│   └── bg.png              # 背景图片
-├── next.config.js          # Next.js 配置
-├── tailwind.config.ts      # Tailwind CSS 配置
-├── tsconfig.json           # TypeScript 配置
-└── package.json            # 项目依赖
+│   └── dailyLuck.ts         # 核心逻辑：种子 RNG + 卡池 + 保底模拟
+├── public/
+│   ├── bg.webp              # 压缩后的背景图
+│   └── characters/          # 角色立绘槽位（按 slug 投放 PNG）
+├── next.config.js
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
 ```
 
 ## 🎮 使用说明
@@ -151,7 +152,7 @@ Wuthering Waves Fortune Detector is a fun web application built with Next.js tha
 ### 🎯 Core Features
 - **Daily Fortune Detection**: Generate deterministic fortune scores (0-100) based on UID and date
 - **Lucky Element Recommendation**: Daily lucky element recommendation (Fusion, Spectro, Aero, Glacio, Electro, Havoc)
-- **Gacha Simulation**: 30-pull gacha simulation showing potential results (no real resources consumed)
+- **Gacha Simulation**: 70-pull gacha simulation with character names and portraits (no real resources consumed)
 - **Trend Chart**: Display fortune trends for past 2 days, today, and next 4 days
 - **ROI Analysis**: Investment return recommendations based on daily fortune scores
 
@@ -234,10 +235,10 @@ wuthering-luck/
 │   ├── ShareCard.tsx        # Share card
 │   └── WaveDecoration.tsx   # Wave decoration
 ├── lib/                     # Utility libraries
-│   ├── dailyLuck.ts         # Daily fortune core logic
-│   └── WutheringWavesGacha.reference.ts  # Gacha mechanism reference
-├── public/                  # Static assets
-│   └── bg.png              # Background image
+│   └── dailyLuck.ts         # Core logic: seeded RNG + card pools + pity simulation
+├── public/
+│   ├── bg.webp              # Compressed background image
+│   └── characters/          # Character portrait slots (drop PNGs by slug)
 ├── next.config.js          # Next.js configuration
 ├── tailwind.config.ts      # Tailwind CSS configuration
 ├── tsconfig.json           # TypeScript configuration

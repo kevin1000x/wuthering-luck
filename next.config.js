@@ -1,13 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 1. 忽略 TypeScript 错误 (强行通过)
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  // 2. 忽略 ESLint 错误 (未使用变量等小问题不报错)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // TS 与 ESLint 错误会在构建期正常拦截，保证进入仓库的代码可通过类型检查与 lint
 };
 
 export default nextConfig;
