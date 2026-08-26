@@ -180,7 +180,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(({ fortune, pullSta
                         marginBottom: '12px',
                         letterSpacing: '2px'
                     }}>
-                        模拟30抽
+                        模拟70抽
                     </div>
                     <div style={{ display: 'flex', gap: '12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>

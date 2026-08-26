@@ -12,9 +12,11 @@ export interface GachaResult {
     rarity: Rarity;
     isUp: boolean;
     pullNumber: number;
+    /** 命中的角色/武器名（三星武器不分配名称） */
+    name?: string;
 }
 
-export interface TenPullResult {
+export interface PullSimResult {
     results: GachaResult[];
     totalFiveStars: number;
     totalFourStars: number;
@@ -29,7 +31,7 @@ export interface DailyFortuneData {
     luckyElement: WutheringElement;
     luckLevel: string;
     recommendation: string;
-    simulatedPull: TenPullResult;
+    simulatedPull: PullSimResult;
 }
 
 export interface TrendDataPoint {
@@ -49,6 +51,76 @@ const BASE_4STAR_RATE = 0.06;
 const HARD_PITY_5STAR = 80;
 const HARD_PITY_4STAR = 10;
 const SOFT_PITY_START = 66;
+
+// 每日模拟抽数：70 抽进入软保底区间，绝大多数玩家能看到五星
+const DAILY_PULL_COUNT = 70;
+
+// ==================== 卡池数据 ====================
+
+/** 五星UP候选池（每日UP结果由种子决定） */
+const UP_FIVE_STAR_POOL: Record<string, string> = {
+    '今汐': 'jinhsi',
+    '折枝': 'zhezhi',
+    '长离': 'changli',
+    '吟霖': 'yinlin',
+    '椿': 'camellya',
+    '洛可可': 'roccia',
+    '菲比': 'phoebe',
+    '赞妮': 'zani',
+    '卡提希娅': 'cantarella',
+    '布兰特': 'brant',
+    '露帕': 'lupa',
+    '奥古斯塔': 'augusta',
+};
+
+/** 五星常驻池（歪了的时候出这些） */
+const OFF_BANNER_FIVE_STAR_POOL: Record<string, string> = {
+    '维里奈': 'verina',
+    '安可': 'encore',
+    '凌阳': 'lingyang',
+    '鉴心': 'jianxin',
+    '卡卡罗': 'calcharo',
+    '相里要': 'xiangli-yao',
+};
+
+/** 四星共鸣者池 */
+const FOUR_STAR_POOL: Record<string, string> = {
+    '炽霞': 'chixia',
+    '秧秧': 'yangyang',
+    '桃祈': 'taoqi',
+    '白芷': 'baizhi',
+    '莫特斐': 'mortefi',
+    '秋水': 'aalto',
+    '散华': 'sanhua',
+    '丹瑾': 'danjin',
+    '渊武': 'yuanwu',
+    '灯灯': 'lumi',
+    '釉瑚': 'youhu',
+};
+
+/** 角色名 → public/characters/{slug}.png 的文件名 */
+export function getCharacterImageSlug(name: string): string | undefined {
+    return (
+        UP_FIVE_STAR_POOL[name] ??
+        OFF_BANNER_FIVE_STAR_POOL[name] ??
+        FOUR_STAR_POOL[name]
+    );
+}
+
+// ==================== 日期工具 ====================
+
+/**
+ * 本地时区日期字符串 YYYY-MM-DD。
+ * 全站统一用本地日期而非 UTC：运势应在用户当地午夜翻转，
+ * 而不是 UTC 午夜（对中国用户即早上 8 点）。
+ */
+export function getLocalDateStr(date?: Date): string {
+    const d = date ?? new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
 
 // ==================== 哈希与随机数生成 ====================
 
@@ -91,6 +163,15 @@ class SeededRNG {
         return this.seed / this.m;
     }
 
+    /** 从 Record 池中按键名等概率挑一个，尽量避免与 recent 重复 */
+    pickName(pool: string[], recent: Set<string>): string {
+        let name = pool[Math.floor(this.next() * pool.length)];
+        if (recent.has(name) && pool.length > 1) {
+            name = pool[Math.floor(this.next() * pool.length)];
+        }
+        return name;
+    }
+
     nextInt(min: number, max: number): number {
         return Math.floor(this.next() * (max - min + 1)) + min;
     }
@@ -104,6 +185,7 @@ class SeededRNG {
 
 class SeededGachaSimulator {
     private rng: SeededRNG;
+    private readonly baseSeed: number;
     private pity5 = 0;
     private pity4 = 0;
     private guaranteed5Up = false;
@@ -111,6 +193,8 @@ class SeededGachaSimulator {
 
     constructor(seed: number) {
         this.rng = new SeededRNG(seed);
+        // 命名走独立随机流，避免影响保底主随机流
+        this.baseSeed = Math.abs(seed) % 2147483647 || 1;
     }
 
     private calculate5StarRate(pity: number): number {
@@ -154,19 +238,48 @@ class SeededGachaSimulator {
         return { rarity: 3, isUp: false, pullNumber: this.pity5 };
     }
 
-    pullThirty(): TenPullResult {
+    pullSimulated(count: number): PullSimResult {
         const results: GachaResult[] = [];
 
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < count; i++) {
             results.push(this.pullOne());
         }
+
+        this.assignNames(results);
 
         return {
             results,
             totalFiveStars: results.filter(r => r.rarity === 5).length,
             totalFourStars: results.filter(r => r.rarity === 4).length,
-            pullCount: 30,
+            pullCount: count,
         };
+    }
+
+    /**
+     * 给已抽出的结果补充角色名。使用独立于主随机流的辅助 RNG：
+     * 日后调整卡池内容不会改变出货序列，只改变展示名称。
+     */
+    private assignNames(results: GachaResult[]): void {
+        const nameRng = new SeededRNG((this.baseSeed ^ 0x5bd1e995) || 1);
+        const recentUp = new Set<string>();
+        const recentOff = new Set<string>();
+        const recentFour = new Set<string>();
+
+        for (const result of results) {
+            if (result.rarity === 5) {
+                if (result.isUp) {
+                    result.name = nameRng.pickName(Object.keys(UP_FIVE_STAR_POOL), recentUp);
+                    recentUp.add(result.name);
+                } else {
+                    result.name = nameRng.pickName(Object.keys(OFF_BANNER_FIVE_STAR_POOL), recentOff);
+                    recentOff.add(result.name);
+                }
+            } else if (result.rarity === 4) {
+                result.name = nameRng.pickName(Object.keys(FOUR_STAR_POOL), recentFour);
+                recentFour.add(result.name);
+            }
+            // 三星为武器，不命名
+        }
     }
 }
 
@@ -178,7 +291,7 @@ class SeededGachaSimulator {
  * @param date 可选日期，默认为今天
  */
 export function getDailySeed(userId: string, date?: string): number {
-    const dateStr = date || new Date().toISOString().split('T')[0];
+    const dateStr = date || getLocalDateStr();
     const combined = `${userId}_${dateStr}_wutheringwaves_fortune`;
     return hashToSeed(combined);
 }
@@ -217,7 +330,7 @@ function getRecommendation(score: number, element: WutheringElement): string {
  * @param userId 用户ID
  */
 export function getDailyFortune(userId: string): DailyFortuneData {
-    const date = new Date().toISOString().split('T')[0];
+    const date = getLocalDateStr();
     const seed = getDailySeed(userId, date);
 
     // 使用种子生成各项数据
@@ -228,7 +341,7 @@ export function getDailyFortune(userId: string): DailyFortuneData {
     // 模拟抽卡
     const gachaSeed = rng.nextInt(1, 2147483647);
     const simulator = new SeededGachaSimulator(gachaSeed);
-    const simulatedPull = simulator.pullThirty();
+    const simulatedPull = simulator.pullSimulated(DAILY_PULL_COUNT);
 
     return {
         userId,
@@ -263,7 +376,7 @@ export function generateTrendData(userId: string): TrendDataPoint[] {
     for (let i = -2; i <= 4; i++) {
         const date = new Date(today);
         date.setDate(date.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = getLocalDateStr(date);
         const score = getFortuneForDate(userId, dateStr);
 
         data.push({

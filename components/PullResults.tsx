@@ -1,11 +1,45 @@
 'use client';
 
-import { GachaResult } from '@/lib/dailyLuck';
+import { GachaResult, getCharacterImageSlug } from '@/lib/dailyLuck';
 import { Star, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface PullResultsProps {
     results: GachaResult[];
+}
+
+// 角色头像：优先加载 public/characters/{slug}.png，缺失时用稀有度渐变占位
+function CharacterAvatar({ name, rarity }: { name?: string; rarity: number }) {
+    const [imgFailed, setImgFailed] = useState(false);
+    const slug = name ? getCharacterImageSlug(name) : undefined;
+
+    if (!slug || imgFailed) {
+        const fallbackBg = rarity === 5
+            ? 'linear-gradient(160deg, rgba(212,175,55,0.35) 0%, rgba(120,90,20,0.25) 55%, rgba(0,0,0,0.45) 100%)'
+            : 'linear-gradient(160deg, rgba(155,89,182,0.32) 0%, rgba(60,30,90,0.28) 55%, rgba(0,0,0,0.45) 100%)';
+        return (
+            <div
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ background: fallbackBg }}
+            >
+                <span className="text-xl font-bold font-display text-white/85">
+                    {name?.charAt(0) ?? '?'}
+                </span>
+            </div>
+        );
+    }
+
+    return (
+        // 原生 <img> 是刻意选择：需要 onError 回退到渐变占位头像
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+            src={`/characters/${slug}.png`}
+            alt={name}
+            onError={() => setImgFailed(true)}
+            draggable={false}
+            className="absolute inset-0 w-full h-full object-cover object-top"
+        />
+    );
 }
 
 // 单个卡片组件
@@ -75,7 +109,7 @@ function PullCard({
     return (
         <div
             className={`
-        relative w-[72px] h-[96px] rounded-xl overflow-hidden backdrop-blur-md
+        relative w-[80px] h-[112px] rounded-xl overflow-hidden backdrop-blur-md
         transition-all duration-500 ease-out
         ${config.containerClass}
         ${isVisible
@@ -85,7 +119,7 @@ function PullCard({
         hover:scale-110 hover:z-20
       `}
             style={{
-                transitionDelay: isVisible ? `${index * 80}ms` : '0ms',
+                transitionDelay: isVisible ? `${index * 30}ms` : '0ms',
             }}
         >
             {/* 5星金色光晕背景 */}
@@ -104,17 +138,24 @@ function PullCard({
                 </div>
             )}
 
-            {/* 中心图标 */}
-            <div className="absolute inset-0 flex items-center justify-center pb-4">
-                {result.rarity === 5 ? (
-                    <Sparkles className={`w-10 h-10 ${config.iconClass}`} />
+            {/* 角色立绘 / 占位 */}
+            <div className="absolute inset-0">
+                {result.name ? (
+                    <CharacterAvatar name={result.name} rarity={result.rarity} />
                 ) : (
-                    <Star className={`w-8 h-8 ${config.iconClass}`} fill="currentColor" />
+                    <div className="absolute inset-0 flex items-center justify-center pb-6">
+                        <Star className={`w-8 h-8 ${config.iconClass}`} fill="currentColor" />
+                    </div>
                 )}
             </div>
 
-            {/* 底部星星等级显示 */}
-            <div className="absolute bottom-2 left-0 right-0">
+            {/* 底部名称与星级 */}
+            <div className="absolute bottom-1.5 left-0 right-0 z-10 flex flex-col items-center gap-1">
+                {result.name && (
+                    <span className="max-w-[76px] truncate text-[10px] leading-none font-medium text-white/90">
+                        {result.name}
+                    </span>
+                )}
                 {renderStars(result.rarity, config.starColor)}
             </div>
 
@@ -147,7 +188,7 @@ export default function PullResults({ results }: PullResultsProps) {
     useEffect(() => {
         setVisibleCards(new Array(results.length).fill(false));
 
-        // 依次显示每张卡片
+        // 依次显示每张卡片（70张，节奏调快避免等待太久）
         results.forEach((_, index) => {
             setTimeout(() => {
                 setVisibleCards(prev => {
@@ -155,7 +196,7 @@ export default function PullResults({ results }: PullResultsProps) {
                     next[index] = true;
                     return next;
                 });
-            }, index * 100 + 100); // 每张卡片间隔100ms
+            }, index * 35 + 100); // 每张卡片间隔35ms
         });
     }, [results]);
 
@@ -190,7 +231,7 @@ export default function PullResults({ results }: PullResultsProps) {
             </div>
 
             {/* 卡片容器 */}
-            <div className="flex flex-wrap gap-2.5 justify-center max-h-80 overflow-y-auto py-2">
+            <div className="flex flex-wrap gap-2.5 justify-center max-h-[520px] overflow-y-auto py-2">
                 {results.map((result, index) => (
                     <PullCard
                         key={index}

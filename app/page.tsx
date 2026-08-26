@@ -9,6 +9,7 @@ import {
 import {
     getDailyFortune,
     generateTrendData,
+    getLocalDateStr,
     DailyFortuneData,
     TrendDataPoint,
     WutheringElement
@@ -143,7 +144,7 @@ export default function Home() {
 
             // 生成下载链接
             const link = document.createElement('a');
-            const date = new Date().toISOString().split('T')[0];
+            const date = getLocalDateStr();
             link.download = `Wuthering_Luck_${date}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
@@ -356,15 +357,15 @@ export default function Home() {
                             </div>
                         </section>
 
-                        {/* 模拟三十连结果 */}
+                        {/* 模拟七十连结果 */}
                         <section className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                             <div className="flex items-center gap-4 mb-6">
                                 <Sparkles className="w-6 h-6 text-ww-gold" />
                                 <h3 className="text-2xl font-bold text-white font-display tracking-wide">
-                                    今日模拟三十连
+                                    今日模拟七十连
                                 </h3>
                                 <span className="text-sm text-white/30 font-display">
-                                    (仅供参考，不消耗资源)
+                                    (进入软保底区间，大概率出金，仅供参考，不消耗资源)
                                 </span>
                             </div>
                             <PullResults results={fortune.simulatedPull.results} />
@@ -388,7 +389,6 @@ export default function Home() {
                         <section className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                             <ROIAnalysis
                                 score={fortune.luckScore}
-                                userId={fortune.userId}
                                 luckyElement={fortune.luckyElement}
                             />
                         </section>
