@@ -9,12 +9,20 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
+                // 基底
                 'ww-dark': '#1a1a1a',
-                'ww-gold': '#d4af37',
-                'ww-purple': '#9b59b6',
-                'ww-blue': '#3498db',
                 'ww-gray': '#2d2d2d',
                 'ww-light-gray': '#404040',
+                // 强调
+                'ww-gold': '#d4af37',
+                'ww-gold-light': '#f4e5b0',
+                'ww-purple': '#9b59b6',
+                'ww-blue': '#3498db',
+                // 四级运势语义色（与 TrendChart 图例一致）：
+                // 金=超吉75+ / 薄荷=中吉50-74 / 琥珀=观望25-49 / 赤=凶<25
+                'ww-mint': '#34d399',
+                'ww-amber': '#fbbf24',
+                'ww-danger': '#f87171',
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],

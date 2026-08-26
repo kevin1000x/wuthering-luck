@@ -303,26 +303,29 @@ export default function ROIAnalysis({ score, luckyElement }: ROIAnalysisProps) {
     // 根据分数选择展示的地点数量
     const locationsToShow = score >= 75 ? 4 : score >= 50 ? 3 : 2;
 
+    // 预期出货
+    const getExpectedPullsColor = () => expectedPulls <= 50 ? 'gold-number' : expectedPulls <= 70 ? 'text-white' : 'text-ww-amber';
+
     // 投资建议
     const getAdvice = () => {
         if (roi >= 150) return { text: '满命冲刺时机！', icon: <Zap className="w-5 h-5" />, color: 'text-ww-gold' };
         if (roi >= 80) return { text: '建议大额投入', icon: <TrendingUp className="w-5 h-5" />, color: 'text-ww-gold' };
-        if (roi >= 20) return { text: '可适度投入', icon: <TrendingUp className="w-5 h-5" />, color: 'text-emerald-400' };
+        if (roi >= 20) return { text: '可适度投入', icon: <TrendingUp className="w-5 h-5" />, color: 'text-ww-mint' };
         if (roi >= 0) return { text: '保守观望', icon: <Minus className="w-5 h-5" />, color: 'text-white/60' };
-        if (roi >= -30) return { text: '建议囤积星声', icon: <TrendingDown className="w-5 h-5" />, color: 'text-orange-400' };
-        if (roi >= -60) return { text: '高风险预警', icon: <TrendingDown className="w-5 h-5" />, color: 'text-red-400' };
-        return { text: '禁止交易日！', icon: <TrendingDown className="w-5 h-5" />, color: 'text-red-500' };
+        if (roi >= -30) return { text: '建议囤积星声', icon: <TrendingDown className="w-5 h-5" />, color: 'text-ww-amber' };
+        if (roi >= -60) return { text: '高风险预警', icon: <TrendingDown className="w-5 h-5" />, color: 'text-ww-danger' };
+        return { text: '禁止交易日！', icon: <TrendingDown className="w-5 h-5" />, color: 'text-ww-danger' };
     };
 
     const advice = getAdvice();
 
     // 风险等级
     const getRiskLevel = () => {
-        if (roi >= 100) return { level: '极低', color: 'bg-emerald-500', textColor: 'text-emerald-400' };
-        if (roi >= 30) return { level: '低', color: 'bg-emerald-400', textColor: 'text-emerald-400' };
-        if (roi >= 0) return { level: '中等', color: 'bg-yellow-500', textColor: 'text-yellow-400' };
-        if (roi >= -40) return { level: '高', color: 'bg-orange-500', textColor: 'text-orange-400' };
-        return { level: '极高', color: 'bg-red-500', textColor: 'text-red-400' };
+        if (roi >= 100) return { level: '极低', color: 'bg-ww-mint', textColor: 'text-ww-mint' };
+        if (roi >= 30) return { level: '低', color: 'bg-ww-mint/70', textColor: 'text-ww-mint' };
+        if (roi >= 0) return { level: '中等', color: 'bg-ww-amber', textColor: 'text-ww-amber' };
+        if (roi >= -40) return { level: '高', color: 'bg-ww-amber/80', textColor: 'text-ww-amber' };
+        return { level: '极高', color: 'bg-ww-danger', textColor: 'text-ww-danger' };
     };
 
     const risk = getRiskLevel();
@@ -355,7 +358,7 @@ export default function ROIAnalysis({ score, luckyElement }: ROIAnalysisProps) {
                 <div className="grid grid-cols-3 gap-4 mb-6">
                     <div className="glass-card-dark rounded-xl p-4 text-center">
                         <p className="text-white/40 text-sm font-display mb-2">投入产出比</p>
-                        <p className={`text-3xl font-bold font-display ${isHighROI ? 'gold-number' : isPositive ? 'text-emerald-400' : isLowROI ? 'text-red-400' : 'text-orange-400'
+                        <p className={`text-3xl font-bold font-display ${isHighROI ? 'gold-number' : isPositive ? 'text-ww-mint' : isLowROI ? 'text-ww-danger' : 'text-ww-amber'
                             }`}>
                             {isPositive ? '+' : ''}{roi.toFixed(0)}%
                         </p>
@@ -371,18 +374,17 @@ export default function ROIAnalysis({ score, luckyElement }: ROIAnalysisProps) {
 
                     <div className="glass-card-dark rounded-xl p-4 text-center">
                         <p className="text-white/40 text-sm font-display mb-2">预期出货</p>
-                        <p className={`text-2xl font-bold font-display ${expectedPulls <= 50 ? 'gold-number' : expectedPulls <= 70 ? 'text-white' : 'text-orange-400'
-                            }`}>
+                        <p className={`text-2xl font-bold font-display ${getExpectedPullsColor()}`}>
                             <span className="text-base text-white/40 mr-1">约</span>{expectedPulls}<span className="text-base text-white/40 ml-1">抽</span>
                         </p>
                     </div>
                 </div>
 
                 {/* 投资建议 */}
-                <div className={`glass-card rounded-xl p-4 border ${isHighROI ? 'border-ww-gold/30' : isLowROI ? 'border-red-500/30' : 'border-white/10'
+                <div className={`glass-card rounded-xl p-4 border ${isHighROI ? 'border-ww-gold/30' : isLowROI ? 'border-ww-danger/30' : 'border-white/10'
                     }`}>
                     <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${isHighROI ? 'bg-ww-gold/20' : isLowROI ? 'bg-red-500/20' : 'bg-white/5'
+                        <div className={`p-2 rounded-lg ${isHighROI ? 'bg-ww-gold/20' : isLowROI ? 'bg-ww-danger/20' : 'bg-white/5'
                             }`}>
                             <span className={advice.color}>{advice.icon}</span>
                         </div>

@@ -186,9 +186,9 @@ export default function Home() {
             {/* 主内容区域 - 添加顶部间距以容纳固定导航栏 */}
             <div className="relative z-10 max-w-6xl mx-auto px-4 pt-24 pb-12">
                 {/* Header */}
-                <header className="text-center mb-16 animate-fade-in-up">
+                <header className="text-center mb-10 md:mb-14 animate-fade-in-up">
                     {/* 顶部装饰线 */}
-                    <div className="divider-gold w-48 mx-auto mb-8" />
+                    <div className="divider-gold w-32 mx-auto mb-6" />
 
                     <h1 className="text-5xl md:text-6xl font-bold mb-4 font-display tracking-wider">
                         <span className="gold-title">鸣潮</span>
@@ -199,11 +199,11 @@ export default function Home() {
                     </p>
 
                     {/* 波形分隔线 */}
-                    <div className="wave-line h-12 mt-8" />
+                    <div className="wave-line h-8 mt-5" />
                 </header>
 
                 {/* ID 输入区域 */}
-                <section className="max-w-lg mx-auto mb-16 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+                <section className="max-w-lg mx-auto mb-12 md:mb-14 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
                     <div className="glass-card rounded-2xl p-8">
                         {/* UID 输入 */}
                         <div className="mb-6">
@@ -270,7 +270,7 @@ export default function Home() {
 
                 {/* Dashboard 仪表盘 */}
                 {showResults && fortune && (
-                    <div className="space-y-10">
+                    <div className="space-y-6 md:space-y-8">
                         {/* 生成分享卡片按钮 */}
                         <div className="flex justify-end">
                             <button
@@ -394,22 +394,22 @@ export default function Home() {
                         </section>
 
                         {/* 数据信息 */}
-                        <footer className="text-center text-white/30 text-sm animate-fade-in-up pt-8">
+                        <footer className="text-center text-white/40 text-sm animate-fade-in-up pt-8">
                             <div className="divider-gold w-32 mx-auto mb-6" />
                             <p className="font-display tracking-wider">
                                 命运种子: <span className="gold-number">{fortune.seed}</span>
                                 <span className="mx-4 opacity-30">|</span>
-                                日期: <span className="text-white/50">{fortune.date}</span>
+                                日期: <span className="text-white/55">{fortune.date}</span>
                             </p>
-                            <p className="mt-2 text-white/20">* 同一用户ID同一天的结果始终一致</p>
+                            <p className="mt-2 text-white/35">* 同一用户ID同一天的结果始终一致</p>
                         </footer>
                     </div>
                 )}
 
                 {/* 空状态提示 */}
                 {!showResults && !isAnimating && (
-                    <div className="text-center text-white/20 py-20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                        <Scan className="w-16 h-16 mx-auto mb-6 opacity-30" />
+                    <div className="text-center text-white/35 py-20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                        <Scan className="w-16 h-16 mx-auto mb-6 opacity-40" />
                         <p className="text-lg font-display tracking-wider">输入共鸣者ID开始检测运势</p>
                     </div>
                 )}

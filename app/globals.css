@@ -482,3 +482,25 @@ body::after {
 .navbar-offset {
   padding-top: 80px;
 }
+
+/* ==================== 可访问性 ==================== */
+
+/* 键盘导航焦点环（金色，仅在 Tab 聚焦时出现） */
+:focus-visible {
+  outline: 2px solid rgba(212, 175, 55, 0.7);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 尊重减少动效偏好：关掉呼吸/流光等纯装饰动画 */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Menu, X, Sparkles, Calendar, History, Info, ExternalLink } from 'lucide-react';
+import { Menu, X, Sparkles, Info, ExternalLink } from 'lucide-react';
 
 interface NavItem {
     id: string;
@@ -30,6 +30,7 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    // 只保留真实存在的页面：未实现的功能不进入导航（诚实的界面）
     const navItems: NavItem[] = [
         {
             id: 'home',
@@ -37,19 +38,11 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
             icon: <Sparkles className="w-4 h-4" />,
         },
         {
-            id: 'gacha',
-            label: '当期卡池',
-            icon: <Calendar className="w-4 h-4" />,
-        },
-        {
-            id: 'history',
-            label: '历史记录',
-            icon: <History className="w-4 h-4" />,
-        },
-        {
             id: 'about',
             label: '关于',
             icon: <Info className="w-4 h-4" />,
+            href: 'https://github.com/kevin1000x/wuthering-luck',
+            isExternal: true,
         },
     ];
 

@@ -32,7 +32,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
         return (
             <div className="glass-card-dark rounded-xl px-5 py-4 border border-white/10">
                 <p className="text-white/50 text-sm font-display tracking-wider mb-1">{label}</p>
-                <p className={`text-4xl font-bold font-display ${isHigh ? 'gold-number' : isMedium ? 'text-emerald-400' : 'text-white/60'
+                <p className={`text-4xl font-bold font-display ${isHigh ? 'gold-number' : isMedium ? 'text-ww-mint' : 'text-white/60'
                     }`}>
                     {score}
                     <span className="text-base text-white/30 ml-1">分</span>
@@ -68,7 +68,7 @@ const CustomDot = (props: DotProps) => {
         );
     }
 
-    const color = score >= 75 ? '#d4af37' : score >= 50 ? '#10b981' : '#6b7280';
+    const color = score >= 75 ? '#d4af37' : score >= 50 ? '#34d399' : '#9ca3af';
     return (
         <circle cx={cx} cy={cy} r={4} fill={color} stroke={color} strokeWidth={2} strokeOpacity={0.3} />
     );
@@ -161,11 +161,11 @@ export default function TrendChart({ data }: TrendChartProps) {
                     <span className="text-white/50">超吉 (75+)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3.5 h-3.5 rounded-full bg-emerald-500" />
+                    <div className="w-3.5 h-3.5 rounded-full bg-ww-mint shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
                     <span className="text-white/50">中吉 (50-74)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3.5 h-3.5 rounded-full bg-gray-500" />
+                    <div className="w-3.5 h-3.5 rounded-full bg-white/30" />
                     <span className="text-white/50">平/凶 (&lt;50)</span>
                 </div>
             </div>

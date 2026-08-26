@@ -2,7 +2,7 @@
 
 import { GachaResult, getCharacterImageSlug } from '@/lib/dailyLuck';
 import { Star, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface PullResultsProps {
     results: GachaResult[];
@@ -94,11 +94,11 @@ function PullCard({
         },
         3: {
             containerClass: `
-        border border-blue-800/40
-        bg-gradient-to-b from-blue-900/10 to-black/20
+        border border-ww-blue/30
+        bg-gradient-to-b from-ww-blue/8 to-black/25
       `,
-            iconClass: 'text-blue-400/50',
-            starColor: 'text-blue-400/40',
+            iconClass: 'text-ww-blue/70',
+            starColor: 'text-ww-blue/60',
             hasShimmer: false,
             hasGlow: false,
         },
@@ -183,13 +183,21 @@ function PullCard({
 
 export default function PullResults({ results }: PullResultsProps) {
     const [visibleCards, setVisibleCards] = useState<boolean[]>([]);
+    const [onlyHighRarity, setOnlyHighRarity] = useState(false);
 
-    // 交错显示动画
+    // 展示列表：可切换为"仅4星以上"，避免70张长列表难翻。
+    // 必须 useMemo：引用稳定才不会触发下方 effect 的循环重放。
+    const displayResults = useMemo(
+        () => (onlyHighRarity ? results.filter(r => r.rarity >= 4) : results),
+        [results, onlyHighRarity]
+    );
+
+    // 交错显示动画（依赖展示列表，切换筛选后重新播放）
     useEffect(() => {
-        setVisibleCards(new Array(results.length).fill(false));
+        setVisibleCards(new Array(displayResults.length).fill(false));
 
         // 依次显示每张卡片（70张，节奏调快避免等待太久）
-        results.forEach((_, index) => {
+        displayResults.forEach((_, index) => {
             setTimeout(() => {
                 setVisibleCards(prev => {
                     const next = [...prev];
@@ -198,7 +206,7 @@ export default function PullResults({ results }: PullResultsProps) {
                 });
             }, index * 35 + 100); // 每张卡片间隔35ms
         });
-    }, [results]);
+    }, [displayResults]);
 
     const fiveStarCount = results.filter(r => r.rarity === 5).length;
     const fourStarCount = results.filter(r => r.rarity === 4).length;
@@ -224,17 +232,39 @@ export default function PullResults({ results }: PullResultsProps) {
                             ×{fourStarCount}
                         </span>
                     )}
-                    <span className="text-blue-400/50">
+                    <span className="text-ww-blue/60">
                         ★3 ×{threeStarCount}
                     </span>
                 </div>
             </div>
 
+            {/* 筛选条 */}
+            <div className="mb-3 flex items-center gap-2">
+                {([
+                    ['all', '全部'],
+                    ['high', '仅4★以上'],
+                ] as const).map(([key, label]) => (
+                    <button
+                        key={key}
+                        onClick={() => setOnlyHighRarity(key === 'high')}
+                        className={`px-3 py-1 rounded-lg text-xs font-display transition-all ${onlyHighRarity === (key === 'high')
+                            ? 'bg-ww-gold/15 text-ww-gold border border-ww-gold/30'
+                            : 'text-white/50 border border-white/10 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        {label}
+                        {key === 'high' && fourStarCount + fiveStarCount > 0 && (
+                            <span className="ml-1.5 opacity-70">{fourStarCount + fiveStarCount}</span>
+                        )}
+                    </button>
+                ))}
+            </div>
+
             {/* 卡片容器 */}
             <div className="flex flex-wrap gap-2.5 justify-center max-h-[520px] overflow-y-auto py-2">
-                {results.map((result, index) => (
+                {displayResults.map((result, index) => (
                     <PullCard
-                        key={index}
+                        key={`${result.pullNumber}-${index}`}
                         result={result}
                         index={index}
                         isVisible={visibleCards[index] || false}
