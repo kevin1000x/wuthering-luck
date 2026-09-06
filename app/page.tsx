@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import {
     Flame, Wind, Zap, Snowflake, Radio, Atom,
-    Sparkles, Play, Scan, Camera, Download
+    Sparkles, Play, Scan, Camera, Download, Copy
 } from 'lucide-react';
 import {
     getDailyFortune,
@@ -20,6 +20,11 @@ import WaveDecoration from '@/components/WaveDecoration';
 import ROIAnalysis from '@/components/ROIAnalysis';
 import ShareCard from '@/components/ShareCard';
 import Navbar from '@/components/Navbar';
+import CompareCard from '@/components/CompareCard';
+import {
+    buildRecordText, buildCompareLink, loadRecentUids,
+    saveRecentUid, relativeDayLabel, RecentUid
+} from '@/lib/record';
 
 // 属性图标映射
 const elementIcons: Record<WutheringElement, React.ReactNode> = {
@@ -52,6 +57,9 @@ export default function Home() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [currentPage, setCurrentPage] = useState('home');
     const shareCardRef = useRef<HTMLDivElement>(null);
+    const [recentUids, setRecentUids] = useState<RecentUid[]>([]);
+    const [compareData, setCompareData] = useState<DailyFortuneData | null>(null);
+    const [copied, setCopied] = useState<'record' | 'link' | null>(null);
 
     // 处理导航切换
     const handleNavigate = (pageId: string) => {
@@ -81,12 +89,13 @@ export default function Home() {
         }
     };
 
-    const handleDetect = () => {
-        if (!uid.trim()) {
+    const handleDetect = (uidArg?: string) => {
+        const target = (uidArg ?? uid).trim();
+        if (!target) {
             setUidError('请输入UID');
             return;
         }
-        if (!validateUid(uid)) {
+        if (!validateUid(target)) {
             setUidError('UID格式错误，必须是6-12位数字');
             return;
         }
@@ -95,16 +104,64 @@ export default function Home() {
         setShowResults(false);
         setUidError('');
 
-        // 模拟加载动画
+        // 命运扫描仪式：扫描线扫过检测台后揭示结果
         setTimeout(() => {
-            const fortuneData = getDailyFortune(uid.trim());
-            const trend = generateTrendData(uid.trim());
+            const fortuneData = getDailyFortune(target);
+            const trend = generateTrendData(target);
 
             setFortune(fortuneData);
             setTrendData(trend);
             setShowResults(true);
             setIsAnimating(false);
+
+            // 记录最近查询 + 把 uid 写入 URL（页面可直接分享）
+            setRecentUids(saveRecentUid(target));
+            const params = new URLSearchParams(window.location.search);
+            params.set('uid', target);
+            history.replaceState(null, '', `/?${params.toString()}`);
         }, 1000);
+    };
+
+    // 初始化：恢复最近查询 + 解析分享链接（?uid= 自动检测，?compare= 显示对比）
+    useEffect(() => {
+        setRecentUids(loadRecentUids());
+
+        const params = new URLSearchParams(window.location.search);
+        const urlCompare = params.get('compare');
+        if (urlCompare && validateUid(urlCompare)) {
+            setCompareData(getDailyFortune(urlCompare));
+        }
+        const urlUid = params.get('uid');
+        if (urlUid && validateUid(urlUid)) {
+            setUid(urlUid);
+            handleDetect(urlUid);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // 复制文字战绩（自带链接，发到群聊即传播）
+    const handleCopyRecord = async () => {
+        if (!fortune) return;
+        try {
+            await navigator.clipboard.writeText(buildRecordText(fortune, window.location.origin));
+            setCopied('record');
+            setTimeout(() => setCopied(null), 2000);
+        } catch {
+            setCopied(null);
+        }
+    };
+
+    // 复制对比链接：对方打开即见我的结果，输入自己 UID 后自动形成对比
+    const handleCopyCompareLink = async () => {
+        if (!fortune) return;
+        try {
+            const link = buildCompareLink(fortune.userId, compareData?.userId ?? null, window.location.origin);
+            await navigator.clipboard.writeText(link);
+            setCopied('link');
+            setTimeout(() => setCopied(null), 2000);
+        } catch {
+            setCopied(null);
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -258,7 +315,7 @@ export default function Home() {
 
                         {/* 提交按钮 */}
                         <button
-                            onClick={handleDetect}
+                            onClick={() => handleDetect()}
                             disabled={!canSubmit}
                             className="tech-button w-full px-8 py-4 rounded-sm text-ww-gold font-semibold font-display
                                      disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2
@@ -272,6 +329,24 @@ export default function Home() {
                             开始监测
                         </button>
                     </div>
+
+                    {/* 最近查询（本地保存，点击直接复查） */}
+                    {recentUids.length > 0 && !isAnimating && (
+                        <div className="mt-4 flex flex-wrap items-center gap-2 justify-center">
+                            <span className="text-white/30 text-xs font-display tracking-widest">最近查询</span>
+                            {recentUids.map((r) => (
+                                <button
+                                    key={r.uid}
+                                    onClick={() => handleDetect(r.uid)}
+                                    className="px-3 py-1 rounded-sm text-xs font-display bg-white/5 border border-white/10
+                                             text-white/50 hover:text-ww-gold hover:border-ww-gold/40 transition-colors"
+                                >
+                                    {r.uid}
+                                    <span className="ml-1.5 opacity-60">{relativeDayLabel(r.ts)}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </section>
 
                 {/* Dashboard 仪表盘 —— 编号分区叙事 */}
@@ -286,29 +361,55 @@ export default function Home() {
                             echoSets={ELEMENT_ECHO_SETS[fortune.luckyElement]}
                             recommendation={fortune.recommendation}
                             action={
-                                <button
-                                    onClick={handleGenerateCard}
-                                    disabled={isGenerating}
-                                    className="shrink-0 self-center flex items-center gap-2 px-4 py-2 rounded-sm
-                                             bg-white/5 border border-white/10 hover:border-ww-gold/40
-                                             text-white/60 hover:text-ww-gold transition-colors
-                                             disabled:opacity-50 disabled:cursor-not-allowed
-                                             font-display text-sm"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <Download className="w-4 h-4 animate-bounce" />
-                                            生成中…
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Camera className="w-4 h-4" />
-                                            生成运势卡
-                                        </>
-                                    )}
-                                </button>
+                                <div className="shrink-0 self-center flex items-center gap-2">
+                                    <button
+                                        onClick={handleCopyRecord}
+                                        disabled={!fortune}
+                                        className="flex items-center gap-1.5 px-4 py-2 rounded-sm
+                                                 bg-white/5 border border-white/10 hover:border-ww-gold/40
+                                                 text-white/60 hover:text-ww-gold transition-colors
+                                                 disabled:opacity-50 disabled:cursor-not-allowed
+                                                 font-display text-sm"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                        {copied === 'record' ? '已复制' : '复制战绩'}
+                                    </button>
+                                    <button
+                                        onClick={handleGenerateCard}
+                                        disabled={isGenerating}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-sm
+                                                 bg-white/5 border border-white/10 hover:border-ww-gold/40
+                                                 text-white/60 hover:text-ww-gold transition-colors
+                                                 disabled:opacity-50 disabled:cursor-not-allowed
+                                                 font-display text-sm"
+                                    >
+                                        {isGenerating ? (
+                                            <>
+                                                <Download className="w-4 h-4 animate-bounce" />
+                                                生成中…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Camera className="w-4 h-4" />
+                                                生成运势卡
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             }
                         />
+
+                        {/* 好友对比（通过 ?compare= 分享链接触发） */}
+                        {compareData && fortune && (
+                            <div className="reveal-in">
+                                <CompareCard
+                                    mine={fortune}
+                                    theirs={compareData}
+                                    copied={copied === 'link'}
+                                    onCopyLink={handleCopyCompareLink}
+                                />
+                            </div>
+                        )}
 
                         {/* 02 命运模拟 */}
                         <div className="reveal-in">
