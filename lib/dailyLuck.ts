@@ -109,6 +109,11 @@ export function getCharacterImageSlug(name: string): string | undefined {
 
 // ==================== 日期工具 ====================
 
+/** UID 校验：6-12 位纯数字 */
+export function isValidUid(value: string): boolean {
+    return /^\d{6,12}$/.test(value);
+}
+
 /**
  * 本地时区日期字符串 YYYY-MM-DD。
  * 全站统一用本地日期而非 UTC：运势应在用户当地午夜翻转，

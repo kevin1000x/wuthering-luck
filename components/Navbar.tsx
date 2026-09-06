@@ -1,25 +1,39 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, X, Sparkles, Info, ExternalLink } from 'lucide-react';
 
 interface NavItem {
     id: string;
     label: string;
     icon: React.ReactNode;
-    href?: string;
+    href: string;
     isExternal?: boolean;
-    isActive?: boolean;
 }
 
-interface NavbarProps {
-    currentPage?: string;
-    onNavigate?: (pageId: string) => void;
-}
+// 只保留真实存在的页面：未实现的功能不进入导航（诚实的界面）
+const NAV_ITEMS: NavItem[] = [
+    {
+        id: 'home',
+        label: '首页',
+        icon: <Sparkles className="w-4 h-4" />,
+        href: '/',
+    },
+    {
+        id: 'about',
+        label: '关于',
+        icon: <Info className="w-4 h-4" />,
+        href: 'https://github.com/kevin1000x/wuthering-luck',
+        isExternal: true,
+    },
+];
 
-export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps) {
+export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const pathname = usePathname();
 
     // 监听滚动（passive：不阻塞滚动合成）
     useEffect(() => {
@@ -30,48 +44,31 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // 只保留真实存在的页面：未实现的功能不进入导航（诚实的界面）
-    const navItems: NavItem[] = [
-        {
-            id: 'home',
-            label: '首页',
-            icon: <Sparkles className="w-4 h-4" />,
-        },
-        {
-            id: 'about',
-            label: '关于',
-            icon: <Info className="w-4 h-4" />,
-            href: 'https://github.com/kevin1000x/wuthering-luck',
-            isExternal: true,
-        },
-    ];
-
-    const handleNavClick = (item: NavItem) => {
-        if (item.isExternal && item.href) {
-            window.open(item.href, '_blank');
-        } else if (onNavigate) {
-            onNavigate(item.id);
-        }
-        setIsMobileMenuOpen(false);
-    };
+    const itemClass = (active: boolean) =>
+        `flex items-center gap-2 px-4 py-2 rounded-xl font-display text-sm
+         transition-colors duration-200 ${active
+            ? 'bg-ww-gold/15 text-ww-gold border border-ww-gold/30'
+            : 'text-white/60 hover:text-white hover:bg-white/5'
+        }`;
 
     return (
         <nav
             className={`fixed top-0 left-0 right-0 z-50 transition-[padding,background-color,border-color] duration-300 ${isScrolled
-                    ? 'py-2 bg-black/60 backdrop-blur-xl border-b border-white/10'
-                    : 'py-4 bg-transparent'
+                ? 'py-2 bg-black/60 backdrop-blur-xl border-b border-white/10'
+                : 'py-4 bg-transparent'
                 }`}
         >
             <div className="max-w-6xl mx-auto px-4">
                 <div className="flex items-center justify-between">
                     {/* Logo */}
-                    <div
+                    <Link
+                        href="/"
                         className="flex items-center gap-3 cursor-pointer group"
-                        onClick={() => onNavigate?.('home')}
+                        aria-label="返回首页"
                     >
                         {/* 音频波形 Logo */}
                         <div className="relative w-10 h-10 flex items-center justify-center">
-                            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-ww-gold/20 to-ww-purple/20 
+                            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-ww-gold/20 to-ww-purple/20
                                           group-hover:from-ww-gold/30 group-hover:to-ww-purple/30" />
                             <div className="relative flex items-end gap-0.5 h-5">
                                 <span className="w-1 bg-ww-gold rounded-full animate-[wave_1s_ease-in-out_infinite]"
@@ -95,25 +92,30 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
                                 Fortune Detector
                             </p>
                         </div>
-                    </div>
+                    </Link>
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center gap-1">
-                        {navItems.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => handleNavClick(item)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-display text-sm
-                                          transition-colors duration-200 ${currentPage === item.id
-                                        ? 'bg-ww-gold/15 text-ww-gold border border-ww-gold/30'
-                                        : 'text-white/60 hover:text-white hover:bg-white/5'
-                                    }`}
-                            >
-                                {item.icon}
-                                <span>{item.label}</span>
-                                {item.isExternal && <ExternalLink className="w-3 h-3 opacity-50" />}
-                            </button>
-                        ))}
+                        {NAV_ITEMS.map((item) =>
+                            item.isExternal ? (
+                                <a
+                                    key={item.id}
+                                    href={item.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={itemClass(false)}
+                                >
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                    <ExternalLink className="w-3 h-3 opacity-50" />
+                                </a>
+                            ) : (
+                                <Link key={item.id} href={item.href} className={itemClass(pathname === item.href)}>
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                </Link>
+                            )
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -137,21 +139,36 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
                         }`}
                 >
                     <div className="glass-card rounded-xl p-2 space-y-1">
-                        {navItems.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => handleNavClick(item)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-display text-sm
-                                          transition-colors duration-200 ${currentPage === item.id
+                        {NAV_ITEMS.map((item) =>
+                            item.isExternal ? (
+                                <a
+                                    key={item.id}
+                                    href={item.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-display text-sm
+                                              transition-colors duration-200 text-white/60 hover:text-white hover:bg-white/5"
+                                >
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                    <ExternalLink className="w-3 h-3 opacity-50 ml-auto" />
+                                </a>
+                            ) : (
+                                <Link
+                                    key={item.id}
+                                    href={item.href}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-display text-sm
+                                              transition-colors duration-200 ${pathname === item.href
                                         ? 'bg-ww-gold/15 text-ww-gold'
                                         : 'text-white/60 hover:text-white hover:bg-white/5'
-                                    }`}
-                            >
-                                {item.icon}
-                                <span>{item.label}</span>
-                                {item.isExternal && <ExternalLink className="w-3 h-3 opacity-50 ml-auto" />}
-                            </button>
-                        ))}
+                                        }`}
+                                >
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                </Link>
+                            )
+                        )}
                     </div>
                 </div>
             </div>

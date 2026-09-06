@@ -1,87 +1,41 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
-import {
-    Flame, Wind, Zap, Snowflake, Radio, Atom,
-    Sparkles, Play, Scan, Camera, Download, Copy
-} from 'lucide-react';
-import {
-    getDailyFortune,
-    generateTrendData,
-    getLocalDateStr,
-    DailyFortuneData,
-    TrendDataPoint,
-    WutheringElement
-} from '@/lib/dailyLuck';
-import ScoreDisplay from '@/components/ScoreDisplay';
-import TrendChart from '@/components/TrendChart';
-import PullResults from '@/components/PullResults';
-import WaveDecoration from '@/components/WaveDecoration';
-import ROIAnalysis from '@/components/ROIAnalysis';
-import ShareCard from '@/components/ShareCard';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Sparkles, Play, Scan } from 'lucide-react';
+import { isValidUid } from '@/lib/dailyLuck';
 import Navbar from '@/components/Navbar';
-import CompareCard from '@/components/CompareCard';
-import {
-    buildRecordText, buildCompareLink, loadRecentUids,
-    saveRecentUid, relativeDayLabel, RecentUid
-} from '@/lib/record';
-
-// 属性图标映射
-const elementIcons: Record<WutheringElement, React.ReactNode> = {
-    '热熔': <Flame className="w-8 h-8 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]" />,
-    '衍射': <Radio className="w-8 h-8 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" />,
-    '气动': <Wind className="w-8 h-8 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]" />,
-    '冷凝': <Snowflake className="w-8 h-8 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]" />,
-    '导电': <Zap className="w-8 h-8 text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]" />,
-    '湮灭': <Atom className="w-8 h-8 text-pink-500 drop-shadow-[0_0_8px_rgba(236,72,153,0.6)]" />,
-};
-
-// 属性对应声骸套装
-const ELEMENT_ECHO_SETS: Record<WutheringElement, string[]> = {
-    '热熔': ['熔山裂谷', '永夜长明'],
-    '衍射': ['凝夜白霜', '隐世回光'],
-    '气动': ['啸谷长风', '轻云出月'],
-    '冷凝': ['凝夜白霜', '沉日劫明'],
-    '导电': ['彻空冥雷', '此时此刻'],
-    '湮灭': ['浮星祛暗', '不绝余音'],
-};
+import WaveDecoration from '@/components/WaveDecoration';
+import { loadRecentUids, saveRecentUid, relativeDayLabel, RecentUid } from '@/lib/record';
 
 export default function Home() {
+    const router = useRouter();
     const [uid, setUid] = useState('');
     const [nickname, setNickname] = useState('');
     const [uidError, setUidError] = useState('');
-    const [fortune, setFortune] = useState<DailyFortuneData | null>(null);
-    const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
-    const [showResults, setShowResults] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [currentPage, setCurrentPage] = useState('home');
-    const shareCardRef = useRef<HTMLDivElement>(null);
     const [recentUids, setRecentUids] = useState<RecentUid[]>([]);
-    const [compareData, setCompareData] = useState<DailyFortuneData | null>(null);
-    const [copied, setCopied] = useState<'record' | 'link' | null>(null);
 
-    // 处理导航切换
-    const handleNavigate = (pageId: string) => {
-        setCurrentPage(pageId);
-        // 目前只有首页功能，其他页面后续扩展
-        if (pageId === 'home') {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 初始化：恢复最近查询；旧版分享链接 /?uid= 兼容跳转到结果页
+    useEffect(() => {
+        setRecentUids(loadRecentUids());
+
+        const params = new URLSearchParams(window.location.search);
+        const urlUid = params.get('uid') ?? '';
+        const urlCompare = params.get('compare');
+        if (isValidUid(urlUid)) {
+            const target = new URLSearchParams({ uid: urlUid });
+            if (urlCompare) target.set('compare', urlCompare);
+            router.replace(`/report?${target.toString()}`);
         }
-    };
-
-    // UID验证 - 必须是6-12位纯数字
-    const validateUid = (value: string): boolean => {
-        const uidRegex = /^\d{6,12}$/;
-        return uidRegex.test(value);
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleUidChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        // 只允许输入数字
         if (value === '' || /^\d+$/.test(value)) {
             setUid(value);
-            if (value && !validateUid(value)) {
+            if (value && !isValidUid(value)) {
                 setUidError('UID必须是6-12位数字');
             } else {
                 setUidError('');
@@ -89,79 +43,25 @@ export default function Home() {
         }
     };
 
-    const handleDetect = (uidArg?: string) => {
-        const target = (uidArg ?? uid).trim();
+    const handleDetect = () => {
+        const target = uid.trim();
         if (!target) {
             setUidError('请输入UID');
             return;
         }
-        if (!validateUid(target)) {
+        if (!isValidUid(target)) {
             setUidError('UID格式错误，必须是6-12位数字');
             return;
         }
 
-        setIsAnimating(true);
-        setShowResults(false);
         setUidError('');
-
-        // 命运扫描仪式：扫描线扫过检测台后揭示结果
+        setIsAnimating(true);
+        // 命运扫描仪式：扫描线扫过检测台后跳转结果页
         setTimeout(() => {
-            const fortuneData = getDailyFortune(target);
-            const trend = generateTrendData(target);
-
-            setFortune(fortuneData);
-            setTrendData(trend);
-            setShowResults(true);
-            setIsAnimating(false);
-
-            // 记录最近查询 + 把 uid 写入 URL（页面可直接分享）
             setRecentUids(saveRecentUid(target));
-            const params = new URLSearchParams(window.location.search);
-            params.set('uid', target);
-            history.replaceState(null, '', `/?${params.toString()}`);
-        }, 1000);
-    };
-
-    // 初始化：恢复最近查询 + 解析分享链接（?uid= 自动检测，?compare= 显示对比）
-    useEffect(() => {
-        setRecentUids(loadRecentUids());
-
-        const params = new URLSearchParams(window.location.search);
-        const urlCompare = params.get('compare');
-        if (urlCompare && validateUid(urlCompare)) {
-            setCompareData(getDailyFortune(urlCompare));
-        }
-        const urlUid = params.get('uid');
-        if (urlUid && validateUid(urlUid)) {
-            setUid(urlUid);
-            handleDetect(urlUid);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // 复制文字战绩（自带链接，发到群聊即传播）
-    const handleCopyRecord = async () => {
-        if (!fortune) return;
-        try {
-            await navigator.clipboard.writeText(buildRecordText(fortune, window.location.origin));
-            setCopied('record');
-            setTimeout(() => setCopied(null), 2000);
-        } catch {
-            setCopied(null);
-        }
-    };
-
-    // 复制对比链接：对方打开即见我的结果，输入自己 UID 后自动形成对比
-    const handleCopyCompareLink = async () => {
-        if (!fortune) return;
-        try {
-            const link = buildCompareLink(fortune.userId, compareData?.userId ?? null, window.location.origin);
-            await navigator.clipboard.writeText(link);
-            setCopied('link');
-            setTimeout(() => setCopied(null), 2000);
-        } catch {
-            setCopied(null);
-        }
+            setIsAnimating(false);
+            router.push(`/report?uid=${target}`);
+        }, 600);
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -170,78 +70,15 @@ export default function Home() {
         }
     };
 
-    // 检查是否可以提交
     const canSubmit = uid.trim().length >= 6 && !uidError && !isAnimating;
-
-    // 生成分享卡片
-    const handleGenerateCard = async () => {
-        if (!shareCardRef.current || !fortune) return;
-
-        setIsGenerating(true);
-        try {
-            // html2canvas 体积较大，按需加载以减小首屏包体
-            const { default: html2canvas } = await import('html2canvas');
-            // 临时显示分享卡片以便截图
-            shareCardRef.current.style.position = 'fixed';
-            shareCardRef.current.style.left = '0';
-            shareCardRef.current.style.top = '0';
-            shareCardRef.current.style.zIndex = '-1';
-
-            const canvas = await html2canvas(shareCardRef.current, {
-                backgroundColor: null,
-                scale: 2,
-                useCORS: true,
-                logging: false,
-            });
-
-            // 恢复隐藏
-            shareCardRef.current.style.position = 'absolute';
-            shareCardRef.current.style.left = '-9999px';
-            shareCardRef.current.style.top = '-9999px';
-            shareCardRef.current.style.zIndex = 'auto';
-
-            // 生成下载链接
-            const link = document.createElement('a');
-            const date = getLocalDateStr();
-            link.download = `Wuthering_Luck_${date}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        } catch (error) {
-            console.error('生成分享卡片失败:', error);
-            alert('生成失败，请重试');
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
-    // 计算抽卡统计
-    const pullStats = useMemo(() => {
-        if (!fortune) return { star5: 0, star4: 0, star3: 0 };
-        const results = fortune.simulatedPull.results;
-        return {
-            star5: results.filter(r => r.rarity === 5).length,
-            star4: results.filter(r => r.rarity === 4).length,
-            star3: results.filter(r => r.rarity === 3).length,
-        };
-    }, [fortune]);
 
     return (
         <main className="min-h-screen relative overflow-hidden">
-            {/* 导航栏 */}
-            <Navbar currentPage={currentPage} onNavigate={handleNavigate} />
+            <Navbar />
 
             {/* 背景波形装饰 */}
             <WaveDecoration />
 
-            {/* 隐藏的分享卡片 */}
-            {fortune && (
-                <ShareCard
-                    ref={shareCardRef}
-                    fortune={fortune}
-                    pullStats={pullStats}
-                />
-            )}
-            {/* 主内容区域 - 添加顶部间距以容纳固定导航栏 */}
             <div className="relative z-10 max-w-6xl mx-auto px-4 pt-24 pb-12">
                 {/* Header */}
                 <header className="text-center mb-10 md:mb-14 animate-fade-in-up">
@@ -337,7 +174,10 @@ export default function Home() {
                             {recentUids.map((r) => (
                                 <button
                                     key={r.uid}
-                                    onClick={() => handleDetect(r.uid)}
+                                    onClick={() => {
+                                        setUid(r.uid);
+                                        handleDetect();
+                                    }}
                                     className="px-3 py-1 rounded-sm text-xs font-display bg-white/5 border border-white/10
                                              text-white/50 hover:text-ww-gold hover:border-ww-gold/40 transition-colors"
                                 >
@@ -349,127 +189,22 @@ export default function Home() {
                     )}
                 </section>
 
-                {/* Dashboard 仪表盘 —— 编号分区叙事 */}
-                {showResults && fortune && (
-                    <div className="space-y-12">
-                        {/* 01 检测结果（报告头 + 分享按钮） */}
-                        <ScoreDisplay
-                            score={fortune.luckScore}
-                            level={fortune.luckLevel}
-                            luckyElement={fortune.luckyElement}
-                            elementIcon={elementIcons[fortune.luckyElement]}
-                            echoSets={ELEMENT_ECHO_SETS[fortune.luckyElement]}
-                            recommendation={fortune.recommendation}
-                            action={
-                                <div className="shrink-0 self-center flex items-center gap-2">
-                                    <button
-                                        onClick={handleCopyRecord}
-                                        disabled={!fortune}
-                                        className="flex items-center gap-1.5 px-4 py-2 rounded-sm
-                                                 bg-white/5 border border-white/10 hover:border-ww-gold/40
-                                                 text-white/60 hover:text-ww-gold transition-colors
-                                                 disabled:opacity-50 disabled:cursor-not-allowed
-                                                 font-display text-sm"
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                        {copied === 'record' ? '已复制' : '复制战绩'}
-                                    </button>
-                                    <button
-                                        onClick={handleGenerateCard}
-                                        disabled={isGenerating}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-sm
-                                                 bg-white/5 border border-white/10 hover:border-ww-gold/40
-                                                 text-white/60 hover:text-ww-gold transition-colors
-                                                 disabled:opacity-50 disabled:cursor-not-allowed
-                                                 font-display text-sm"
-                                    >
-                                        {isGenerating ? (
-                                            <>
-                                                <Download className="w-4 h-4 animate-bounce" />
-                                                生成中…
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Camera className="w-4 h-4" />
-                                                生成运势卡
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            }
-                        />
-
-                        {/* 好友对比（通过 ?compare= 分享链接触发） */}
-                        {compareData && fortune && (
-                            <div className="reveal-in">
-                                <CompareCard
-                                    mine={fortune}
-                                    theirs={compareData}
-                                    copied={copied === 'link'}
-                                    onCopyLink={handleCopyCompareLink}
-                                />
+                {/* 特性速览 */}
+                <section className="max-w-3xl mx-auto text-center animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                    <div className="divider-gold w-24 mx-auto mb-8" />
+                    <div className="grid sm:grid-cols-3 gap-6 text-left">
+                        {[
+                            { title: '确定性运势', desc: '同 UID 同一天结果始终一致，纯本地计算不上传任何数据' },
+                            { title: '模拟七十连', desc: '进入软保底区间，大概率出金，命中结果带角色立绘' },
+                            { title: '好友对比', desc: '分享链接即可比欧，输入对方 UID 一秒见分晓' },
+                        ].map((f) => (
+                            <div key={f.title} className="panel rounded-md p-5">
+                                <p className="text-ww-gold font-display font-semibold tracking-wide mb-2">{f.title}</p>
+                                <p className="text-white/45 text-sm leading-relaxed">{f.desc}</p>
                             </div>
-                        )}
-
-                        {/* 02 命运模拟 */}
-                        <div className="reveal-in">
-                            <div className="section-head mb-4">
-                                <span className="index">02</span>
-                                <h3 className="text-lg md:text-xl font-bold text-white font-display tracking-wide whitespace-nowrap">命运模拟七十连</h3>
-                                <span className="text-xs text-white/35 font-display tracking-[0.25em] uppercase hidden sm:inline">Gacha Simulation</span>
-                                <span className="text-white/35 text-xs hidden lg:inline">进入软保底区间，大概率出金</span>
-                                <span className="rule" />
-                            </div>
-                            <PullResults results={fortune.simulatedPull.results} />
-                        </div>
-
-                        {/* 03 运势趋势 */}
-                        <div className="reveal-in">
-                            <div className="section-head mb-4">
-                                <span className="index">03</span>
-                                <h3 className="text-lg md:text-xl font-bold text-white font-display tracking-wide whitespace-nowrap">运势趋势预测</h3>
-                                <span className="text-xs text-white/35 font-display tracking-[0.25em] uppercase">Trend</span>
-                                <span className="rule" />
-                            </div>
-                            <div className="hud-panel p-6 md:p-8">
-                                <TrendChart data={trendData} />
-                            </div>
-                        </div>
-
-                        {/* 04 投资策略 */}
-                        <div className="reveal-in">
-                            <div className="section-head mb-4">
-                                <span className="index">04</span>
-                                <h3 className="text-lg md:text-xl font-bold text-white font-display tracking-wide whitespace-nowrap">投资策略分析</h3>
-                                <span className="text-xs text-white/35 font-display tracking-[0.25em] uppercase">Strategy</span>
-                                <span className="rule" />
-                            </div>
-                            <ROIAnalysis
-                                score={fortune.luckScore}
-                                luckyElement={fortune.luckyElement}
-                            />
-                        </div>
-
-                        {/* 数据信息 */}
-                        <footer className="text-center text-white/40 text-sm animate-fade-in-up pt-8">
-                            <div className="divider-gold w-32 mx-auto mb-6" />
-                            <p className="font-display tracking-wider">
-                                命运种子: <span className="gold-number">{fortune.seed}</span>
-                                <span className="mx-4 opacity-30">|</span>
-                                日期: <span className="text-white/55">{fortune.date}</span>
-                            </p>
-                            <p className="mt-2 text-white/35">* 同一用户ID同一天的结果始终一致</p>
-                        </footer>
+                        ))}
                     </div>
-                )}
-
-                {/* 空状态提示 */}
-                {!showResults && !isAnimating && (
-                    <div className="text-center text-white/35 py-14 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                        <Scan className="w-14 h-14 mx-auto mb-5 opacity-40" />
-                        <p className="text-lg font-display tracking-wider">输入共鸣者ID，启动命运扫描</p>
-                    </div>
-                )}
+                </section>
             </div>
         </main>
     );

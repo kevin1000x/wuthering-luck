@@ -21,15 +21,15 @@ export function buildRecordText(fortune: DailyFortuneData, origin: string): stri
         `🔮 鸣潮今日运势 ${fortune.luckScore}分 ${fortune.luckLevel}`,
         `七十连：${star5}金${star4}紫 | 幸运属性【${fortune.luckyElement}】`,
         `UID ${fortune.userId}`,
-        `▶ ${origin}/?uid=${fortune.userId}`,
+        `▶ ${origin}/report?uid=${fortune.userId}`,
     ].join('\n');
 }
 
-/** 对比链接：打开即见 uid 的结果 + 与 compare 的对比 */
+/** 对比链接：打开即见 uid 的结果页 + 与 compare 的对比 */
 export function buildCompareLink(uid: string, compareUid: string | null, origin: string): string {
     const params = new URLSearchParams({ uid });
     if (compareUid) params.set('compare', compareUid);
-    return `${origin}/?${params.toString()}`;
+    return `${origin}/report?${params.toString()}`;
 }
 
 export function loadRecentUids(): RecentUid[] {
