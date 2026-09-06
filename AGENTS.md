@@ -33,7 +33,8 @@ components/         7 个展示组件，全部 'use client'，从 page.tsx 接 p
 lib/dailyLuck.ts    核心纯逻辑：本地日期工具、种子哈希、SeededRNG(LCG)、保底抽卡模拟器、卡池
 ```
 
-- 所有计算都在浏览器端完成，**不调用任何后端 API、不上传任何数据**（README 明确承诺隐私）。新增功能应保持纯客户端实现。
+- 所有计算都在浏览器端完成；**默认零后端、不上传数据**。可选的 Supabase 云端同步（魔法链接登录 + watchlist 收藏表，`lib/supabase.ts`/`lib/account.ts`/`components/CloudSync.tsx`，建表脚本 `supabase/schema.sql`）仅在配置了 `NEXT_PUBLIC_SUPABASE_*` 环境变量后启用，未配置时 UI 自动隐藏、行为与纯客户端一致——新增云端功能必须保持这一降级约定。
+- 历史运势不落库：`getFortuneForDate` 可按日期确定性推演，任何"历史规律"类需求优先纯计算实现（见 `components/HistoryHeatmap.tsx`）。
 - 引入新组件时沿用现有模式：顶部 `'use client'` + 命名导出类型从 `@/lib/dailyLuck` 取。
 - 路径别名 `@/*` 映射到仓库根目录。
 

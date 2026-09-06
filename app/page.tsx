@@ -6,6 +6,7 @@ import { Sparkles, Play, Scan } from 'lucide-react';
 import { isValidUid } from '@/lib/dailyLuck';
 import Navbar from '@/components/Navbar';
 import WaveDecoration from '@/components/WaveDecoration';
+import CloudSync from '@/components/CloudSync';
 import { loadRecentUids, saveRecentUid, relativeDayLabel, RecentUid } from '@/lib/record';
 
 export default function Home() {
@@ -188,6 +189,9 @@ export default function Home() {
                         </div>
                     )}
                 </section>
+
+                {/* 云端同步（配置 Supabase 后显示，未配置自动隐藏） */}
+                <CloudSync />
 
                 {/* 特性速览 */}
                 <section className="max-w-3xl mx-auto text-center animate-fade-in-up" style={{ animationDelay: '0.3s' }}>

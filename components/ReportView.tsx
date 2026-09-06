@@ -11,6 +11,7 @@ import PullResults from '@/components/PullResults';
 import ROIAnalysis from '@/components/ROIAnalysis';
 import ShareCard from '@/components/ShareCard';
 import CompareCard from '@/components/CompareCard';
+import HistoryHeatmap from '@/components/HistoryHeatmap';
 import WaveDecoration from '@/components/WaveDecoration';
 import Navbar from '@/components/Navbar';
 import { elementIcons, ELEMENT_ECHO_SETS } from '@/components/elementVisuals';
@@ -260,6 +261,9 @@ export default function ReportView() {
                             luckyElement={fortune.luckyElement}
                         />
                     </div>
+
+                    {/* 05 历史规律 */}
+                    <HistoryHeatmap uid={fortune.userId} />
 
                     {/* 数据信息 */}
                     <footer className="text-center text-white/40 text-sm pt-8">

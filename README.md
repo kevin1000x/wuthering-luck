@@ -119,7 +119,9 @@ wuthering-luck/
 
 ## 🔐 隐私说明
 
-本应用完全在浏览器端运行，不会收集或存储任何用户数据。输入的 UID 和昵称仅用于本地计算，不会发送到任何服务器。
+运势计算完全在浏览器本地完成。默认情况下不收集、不存储、不上传任何用户数据。
+
+可选的云端同步功能（收藏 UID 跨设备）需用户主动通过邮箱魔法链接登录后才会启用，同步的数据仅有收藏的 UID 列表；未登录或未配置 Supabase 时，站点行为与纯本地应用完全一致。
 
 ## 📄 许可证
 
@@ -255,7 +257,9 @@ wuthering-luck/
 
 ## 🔐 Privacy Notice
 
-This application runs entirely in the browser and does not collect or store any user data. The entered UID and nickname are only used for local calculations and are not sent to any server.
+Fortune calculation runs entirely in your browser. By default, no user data is collected, stored, or uploaded.
+
+The optional cloud sync (watchlist across devices) only activates after you explicitly sign in via an email magic link; the only synced data is your saved UID list. Without signing in (or without Supabase configured), the site behaves exactly like a fully local app.
 
 ## 📄 License
 
