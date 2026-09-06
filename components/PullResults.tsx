@@ -2,7 +2,7 @@
 
 import { GachaResult, getCharacterImageSlug } from '@/lib/dailyLuck';
 import { Star, Sparkles } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 interface PullResultsProps {
     results: GachaResult[];
@@ -42,15 +42,13 @@ function CharacterAvatar({ name, rarity }: { name?: string; rarity: number }) {
     );
 }
 
-// 单个卡片组件
+// 单个卡片组件（入场由 .deal-card 的 CSS animation-delay 驱动）
 function PullCard({
     result,
-    index,
-    isVisible
+    index
 }: {
     result: GachaResult;
     index: number;
-    isVisible: boolean;
 }) {
     // 生成星星数量
     const renderStars = (count: number, colorClass: string) => {
@@ -89,7 +87,7 @@ function PullCard({
       `,
             iconClass: 'text-ww-purple drop-shadow-[0_0_8px_rgba(155,89,182,0.8)]',
             starColor: 'text-ww-purple drop-shadow-[0_0_4px_rgba(155,89,182,0.6)]',
-            hasShimmer: true,
+            hasShimmer: false,
             hasGlow: false,
         },
         3: {
@@ -109,18 +107,10 @@ function PullCard({
     return (
         <div
             className={`
-        relative w-[80px] h-[112px] rounded-xl overflow-hidden backdrop-blur-md
-        transition-all duration-500 ease-out
+        pull-card deal-card relative w-[80px] h-[112px] rounded-md overflow-hidden
         ${config.containerClass}
-        ${isVisible
-                    ? 'opacity-100 translate-y-0 scale-100'
-                    : 'opacity-0 translate-y-8 scale-90'
-                }
-        hover:scale-110 hover:z-20
       `}
-            style={{
-                transitionDelay: isVisible ? `${index * 30}ms` : '0ms',
-            }}
+            style={{ animationDelay: `${index * 24}ms` }}
         >
             {/* 5星金色光晕背景 */}
             {result.rarity === 5 && config.hasGlow && (
@@ -182,31 +172,14 @@ function PullCard({
 }
 
 export default function PullResults({ results }: PullResultsProps) {
-    const [visibleCards, setVisibleCards] = useState<boolean[]>([]);
     const [onlyHighRarity, setOnlyHighRarity] = useState(false);
 
     // 展示列表：可切换为"仅4星以上"，避免70张长列表难翻。
-    // 必须 useMemo：引用稳定才不会触发下方 effect 的循环重放。
+    // 必须 useMemo：引用稳定才不会重复触发卡片重挂载动画。
     const displayResults = useMemo(
         () => (onlyHighRarity ? results.filter(r => r.rarity >= 4) : results),
         [results, onlyHighRarity]
     );
-
-    // 交错显示动画（依赖展示列表，切换筛选后重新播放）
-    useEffect(() => {
-        setVisibleCards(new Array(displayResults.length).fill(false));
-
-        // 依次显示每张卡片（70张，节奏调快避免等待太久）
-        displayResults.forEach((_, index) => {
-            setTimeout(() => {
-                setVisibleCards(prev => {
-                    const next = [...prev];
-                    next[index] = true;
-                    return next;
-                });
-            }, index * 35 + 100); // 每张卡片间隔35ms
-        });
-    }, [displayResults]);
 
     const fiveStarCount = results.filter(r => r.rarity === 5).length;
     const fourStarCount = results.filter(r => r.rarity === 4).length;
@@ -247,7 +220,8 @@ export default function PullResults({ results }: PullResultsProps) {
                     <button
                         key={key}
                         onClick={() => setOnlyHighRarity(key === 'high')}
-                        className={`px-3 py-1 rounded-lg text-xs font-display transition-all ${onlyHighRarity === (key === 'high')
+                        aria-pressed={onlyHighRarity === (key === 'high')}
+                        className={`px-3 py-1 rounded-lg text-xs font-display transition-colors ${onlyHighRarity === (key === 'high')
                             ? 'bg-ww-gold/15 text-ww-gold border border-ww-gold/30'
                             : 'text-white/50 border border-white/10 hover:text-white hover:bg-white/5'
                             }`}
@@ -261,13 +235,12 @@ export default function PullResults({ results }: PullResultsProps) {
             </div>
 
             {/* 卡片容器 */}
-            <div className="flex flex-wrap gap-2.5 justify-center max-h-[520px] overflow-y-auto py-2">
+            <div className="pull-scroll flex flex-wrap gap-2.5 justify-center max-h-[520px] overflow-y-auto py-2">
                 {displayResults.map((result, index) => (
                     <PullCard
                         key={`${result.pullNumber}-${index}`}
                         result={result}
                         index={index}
-                        isVisible={visibleCards[index] || false}
                     />
                 ))}
             </div>

@@ -21,12 +21,12 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // 监听滚动
+    // 监听滚动（passive：不阻塞滚动合成）
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -57,7 +57,7 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
 
     return (
         <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+            className={`fixed top-0 left-0 right-0 z-50 transition-[padding,background-color,border-color] duration-300 ${isScrolled
                     ? 'py-2 bg-black/60 backdrop-blur-xl border-b border-white/10'
                     : 'py-4 bg-transparent'
                 }`}
@@ -72,7 +72,7 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
                         {/* 音频波形 Logo */}
                         <div className="relative w-10 h-10 flex items-center justify-center">
                             <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-ww-gold/20 to-ww-purple/20 
-                                          group-hover:from-ww-gold/30 group-hover:to-ww-purple/30 transition-all" />
+                                          group-hover:from-ww-gold/30 group-hover:to-ww-purple/30" />
                             <div className="relative flex items-end gap-0.5 h-5">
                                 <span className="w-1 bg-ww-gold rounded-full animate-[wave_1s_ease-in-out_infinite]"
                                     style={{ height: '40%', animationDelay: '0ms' }} />
@@ -87,10 +87,10 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
                             </div>
                         </div>
                         <div className="hidden sm:block">
-                            <h1 className="text-lg font-bold font-display tracking-wide">
+                            <p className="text-lg font-bold font-display tracking-wide">
                                 <span className="text-ww-gold">鸣潮</span>
                                 <span className="text-white/90">运势</span>
-                            </h1>
+                            </p>
                             <p className="text-[10px] text-white/30 font-display tracking-widest uppercase -mt-0.5">
                                 Fortune Detector
                             </p>
@@ -104,7 +104,7 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
                                 key={item.id}
                                 onClick={() => handleNavClick(item)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl font-display text-sm
-                                          transition-all duration-200 ${currentPage === item.id
+                                          transition-colors duration-200 ${currentPage === item.id
                                         ? 'bg-ww-gold/15 text-ww-gold border border-ww-gold/30'
                                         : 'text-white/60 hover:text-white hover:bg-white/5'
                                     }`}
@@ -119,7 +119,9 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="md:hidden p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all"
+                        aria-label={isMobileMenuOpen ? '关闭菜单' : '打开菜单'}
+                        aria-expanded={isMobileMenuOpen}
+                        className="md:hidden p-2 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors"
                     >
                         {isMobileMenuOpen ? (
                             <X className="w-6 h-6" />
@@ -131,7 +133,7 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
 
                 {/* Mobile Menu */}
                 <div
-                    className={`md:hidden overflow-hidden transition-all duration-300 ${isMobileMenuOpen ? 'max-h-80 mt-4' : 'max-h-0'
+                    className={`md:hidden overflow-hidden transition-[max-height,margin] duration-300 ${isMobileMenuOpen ? 'max-h-80 mt-4' : 'max-h-0'
                         }`}
                 >
                     <div className="glass-card rounded-xl p-2 space-y-1">
@@ -140,7 +142,7 @@ export default function Navbar({ currentPage = 'home', onNavigate }: NavbarProps
                                 key={item.id}
                                 onClick={() => handleNavClick(item)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-display text-sm
-                                          transition-all duration-200 ${currentPage === item.id
+                                          transition-colors duration-200 ${currentPage === item.id
                                         ? 'bg-ww-gold/15 text-ww-gold'
                                         : 'text-white/60 hover:text-white hover:bg-white/5'
                                     }`}

@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useRef, useMemo } from 'react';
-import html2canvas from 'html2canvas';
 import {
     Flame, Wind, Zap, Snowflake, Radio, Atom,
-    Sparkles, TrendingUp, Play, Scan, Camera, Download
+    Sparkles, Play, Scan, Camera, Download
 } from 'lucide-react';
 import {
     getDailyFortune,
@@ -123,6 +122,8 @@ export default function Home() {
 
         setIsGenerating(true);
         try {
+            // html2canvas 体积较大，按需加载以减小首屏包体
+            const { default: html2canvas } = await import('html2canvas');
             // 临时显示分享卡片以便截图
             shareCardRef.current.style.position = 'fixed';
             shareCardRef.current.style.left = '0';
@@ -190,7 +191,7 @@ export default function Home() {
                     {/* 顶部装饰线 */}
                     <div className="divider-gold w-32 mx-auto mb-6" />
 
-                    <h1 className="text-5xl md:text-6xl font-bold mb-4 font-display tracking-wider">
+                    <h1 className="text-4xl md:text-6xl font-bold mb-4 font-display tracking-wider [text-wrap:balance]">
                         <span className="gold-title">鸣潮</span>
                         <span className="text-white/90">运势检测器</span>
                     </h1>
@@ -202,9 +203,11 @@ export default function Home() {
                     <div className="wave-line h-8 mt-5" />
                 </header>
 
-                {/* ID 输入区域 */}
+                {/* ID 输入区域 —— 命运检测台 */}
                 <section className="max-w-lg mx-auto mb-12 md:mb-14 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-                    <div className="glass-card rounded-2xl p-8">
+                    <div className="hud-panel corner-brackets relative overflow-hidden p-6 md:p-8">
+                        {/* 命运扫描线：点击检测后一次性扫过 */}
+                        {isAnimating && <div className="scanline" />}
                         {/* UID 输入 */}
                         <div className="mb-6">
                             <label className="block text-white/50 mb-3 text-sm uppercase tracking-[0.2em] font-display">
@@ -215,10 +218,12 @@ export default function Home() {
                                 type="text"
                                 value={uid}
                                 onChange={handleUidChange}
-                                onKeyPress={handleKeyPress}
-                                placeholder="输入你的游戏UID，如 106971359"
+                                onKeyDown={handleKeyPress}
+                                inputMode="numeric"
+                                autoComplete="off"
+                                placeholder="输入你的游戏UID，如 106971359…"
                                 maxLength={12}
-                                className={`tech-input w-full px-5 py-4 rounded-xl text-white text-lg ${uidError ? 'border-red-500/50 focus:border-red-500' : ''
+                                className={`tech-input w-full px-5 py-4 rounded-sm text-white text-lg ${uidError ? 'border-red-500/50 focus:border-red-500' : ''
                                     }`}
                             />
                             {uidError && (
@@ -240,10 +245,11 @@ export default function Home() {
                                 type="text"
                                 value={nickname}
                                 onChange={(e) => setNickname(e.target.value)}
-                                onKeyPress={handleKeyPress}
-                                placeholder="输入你的游戏昵称..."
+                                onKeyDown={handleKeyPress}
+                                autoComplete="off"
+                                placeholder="输入你的游戏昵称…"
                                 maxLength={20}
-                                className="tech-input w-full px-5 py-4 rounded-xl text-white text-lg"
+                                className="tech-input w-full px-5 py-4 rounded-sm text-white text-lg"
                             />
                             <p className="text-white/30 text-xs mt-2">
                                 昵称仅用于显示，不影响运势计算
@@ -254,7 +260,7 @@ export default function Home() {
                         <button
                             onClick={handleDetect}
                             disabled={!canSubmit}
-                            className="tech-button w-full px-8 py-4 rounded-xl text-ww-gold font-semibold font-display
+                            className="tech-button w-full px-8 py-4 rounded-sm text-ww-gold font-semibold font-display
                                      disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2
                                      text-base tracking-wide"
                         >
@@ -268,130 +274,80 @@ export default function Home() {
                     </div>
                 </section>
 
-                {/* Dashboard 仪表盘 */}
+                {/* Dashboard 仪表盘 —— 编号分区叙事 */}
                 {showResults && fortune && (
-                    <div className="space-y-6 md:space-y-8">
-                        {/* 生成分享卡片按钮 */}
-                        <div className="flex justify-end">
-                            <button
-                                onClick={handleGenerateCard}
-                                disabled={isGenerating}
-                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                                         bg-white/5 border border-white/10 hover:border-ww-gold/30
-                                         text-white/60 hover:text-ww-gold transition-all
-                                         disabled:opacity-50 disabled:cursor-not-allowed
-                                         font-display text-sm"
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <Download className="w-4 h-4 animate-bounce" />
-                                        生成中...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Camera className="w-4 h-4" />
-                                        📸 生成运势卡
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                        {/* 运势分数 & 幸运属性 */}
-                        <section className="grid md:grid-cols-2 gap-8 animate-fade-in-up">
-                            {/* 分数显示 */}
-                            <ScoreDisplay
-                                score={fortune.luckScore}
-                                level={fortune.luckLevel}
-                            />
+                    <div className="space-y-12">
+                        {/* 01 检测结果（报告头 + 分享按钮） */}
+                        <ScoreDisplay
+                            score={fortune.luckScore}
+                            level={fortune.luckLevel}
+                            luckyElement={fortune.luckyElement}
+                            elementIcon={elementIcons[fortune.luckyElement]}
+                            echoSets={ELEMENT_ECHO_SETS[fortune.luckyElement]}
+                            recommendation={fortune.recommendation}
+                            action={
+                                <button
+                                    onClick={handleGenerateCard}
+                                    disabled={isGenerating}
+                                    className="shrink-0 self-center flex items-center gap-2 px-4 py-2 rounded-sm
+                                             bg-white/5 border border-white/10 hover:border-ww-gold/40
+                                             text-white/60 hover:text-ww-gold transition-colors
+                                             disabled:opacity-50 disabled:cursor-not-allowed
+                                             font-display text-sm"
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Download className="w-4 h-4 animate-bounce" />
+                                            生成中…
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Camera className="w-4 h-4" />
+                                            生成运势卡
+                                        </>
+                                    )}
+                                </button>
+                            }
+                        />
 
-                            {/* 幸运属性 */}
-                            <div className="glass-card rounded-2xl p-6 card-hover text-center flex flex-col justify-center">
-                                <h3 className="text-white/40 text-sm uppercase tracking-[0.2em] mb-4 font-display">
-                                    今日幸运属性
-                                </h3>
-                                <div className="flex items-center justify-center gap-5 mb-4">
-                                    <div className="p-4 glass-card-dark rounded-xl">
-                                        {elementIcons[fortune.luckyElement]}
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="text-2xl font-bold text-white font-display tracking-wide">
-                                            {fortune.luckyElement}
-                                        </p>
-                                        <p className="text-white/40 text-sm mt-1">
-                                            使用该属性角色可增加运势
-                                        </p>
-                                    </div>
-                                </div>
-                                {/* 推荐声骸套装 */}
-                                <div className="pt-4 border-t border-white/5">
-                                    <p className="text-white/40 text-xs font-display mb-2">推荐声骸套装</p>
-                                    <div className="flex flex-wrap gap-2 justify-center">
-                                        {ELEMENT_ECHO_SETS[fortune.luckyElement].map((set, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="px-2.5 py-1 rounded-lg bg-ww-purple/10 border border-ww-purple/20 
-                                                         text-ww-purple font-display text-xs"
-                                            >
-                                                {set}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* 运势建议 */}
-                        <section
-                            className="glass-card-gold rounded-2xl p-8 animate-fade-in-up"
-                            style={{ animationDelay: '0.1s' }}
-                        >
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 glass-card rounded-xl">
-                                    <TrendingUp className="w-6 h-6 text-ww-gold" />
-                                </div>
-                                <div>
-                                    <h3 className="gold-title font-semibold mb-3 text-lg font-display tracking-wide">
-                                        今日建议
-                                    </h3>
-                                    <p className="text-white/70 leading-relaxed">{fortune.recommendation}</p>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* 模拟七十连结果 */}
-                        <section className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                            <div className="flex items-center gap-4 mb-6">
-                                <Sparkles className="w-6 h-6 text-ww-gold" />
-                                <h3 className="text-2xl font-bold text-white font-display tracking-wide">
-                                    今日模拟七十连
-                                </h3>
-                                <span className="text-sm text-white/30 font-display">
-                                    (进入软保底区间，大概率出金，仅供参考，不消耗资源)
-                                </span>
+                        {/* 02 命运模拟 */}
+                        <div className="reveal-in">
+                            <div className="section-head mb-4">
+                                <span className="index">02</span>
+                                <h3 className="text-lg md:text-xl font-bold text-white font-display tracking-wide whitespace-nowrap">命运模拟七十连</h3>
+                                <span className="text-xs text-white/35 font-display tracking-[0.25em] uppercase hidden sm:inline">Gacha Simulation</span>
+                                <span className="text-white/35 text-xs hidden lg:inline">进入软保底区间，大概率出金</span>
+                                <span className="rule" />
                             </div>
                             <PullResults results={fortune.simulatedPull.results} />
-                        </section>
+                        </div>
 
-                        {/* 运势走势图 */}
-                        <section
-                            className="glass-card rounded-2xl p-8 animate-fade-in-up"
-                            style={{ animationDelay: '0.3s' }}
-                        >
-                            <div className="flex items-center gap-4 mb-6">
-                                <TrendingUp className="w-6 h-6 text-ww-gold" />
-                                <h3 className="text-2xl font-bold text-white font-display tracking-wide">
-                                    运势走势预测
-                                </h3>
+                        {/* 03 运势趋势 */}
+                        <div className="reveal-in">
+                            <div className="section-head mb-4">
+                                <span className="index">03</span>
+                                <h3 className="text-lg md:text-xl font-bold text-white font-display tracking-wide whitespace-nowrap">运势趋势预测</h3>
+                                <span className="text-xs text-white/35 font-display tracking-[0.25em] uppercase">Trend</span>
+                                <span className="rule" />
                             </div>
-                            <TrendChart data={trendData} />
-                        </section>
+                            <div className="hud-panel p-6 md:p-8">
+                                <TrendChart data={trendData} />
+                            </div>
+                        </div>
 
-                        {/* ROI 投资分析 */}
-                        <section className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                        {/* 04 投资策略 */}
+                        <div className="reveal-in">
+                            <div className="section-head mb-4">
+                                <span className="index">04</span>
+                                <h3 className="text-lg md:text-xl font-bold text-white font-display tracking-wide whitespace-nowrap">投资策略分析</h3>
+                                <span className="text-xs text-white/35 font-display tracking-[0.25em] uppercase">Strategy</span>
+                                <span className="rule" />
+                            </div>
                             <ROIAnalysis
                                 score={fortune.luckScore}
                                 luckyElement={fortune.luckyElement}
                             />
-                        </section>
+                        </div>
 
                         {/* 数据信息 */}
                         <footer className="text-center text-white/40 text-sm animate-fade-in-up pt-8">
@@ -408,21 +364,9 @@ export default function Home() {
 
                 {/* 空状态提示 */}
                 {!showResults && !isAnimating && (
-                    <div className="text-center text-white/35 py-20 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                        <Scan className="w-16 h-16 mx-auto mb-6 opacity-40" />
-                        <p className="text-lg font-display tracking-wider">输入共鸣者ID开始检测运势</p>
-                    </div>
-                )}
-
-                {/* 加载状态 */}
-                {isAnimating && (
-                    <div className="text-center py-20">
-                        <div className="inline-block">
-                            <Sparkles className="w-16 h-16 text-ww-gold animate-pulse mx-auto mb-6" />
-                            <p className="text-ww-gold font-display text-xl tracking-wider animate-pulse">
-                                正在连接命运通道...
-                            </p>
-                        </div>
+                    <div className="text-center text-white/35 py-14 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                        <Scan className="w-14 h-14 mx-auto mb-5 opacity-40" />
+                        <p className="text-lg font-display tracking-wider">输入共鸣者ID，启动命运扫描</p>
                     </div>
                 )}
             </div>

@@ -27,6 +27,15 @@ body {
   overflow-x: hidden;
   color: #ffffff;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  /* 深色主题告知原生控件；触屏去双击缩放延迟与高亮 */
+  color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+[role='button'] {
+  touch-action: manipulation;
 }
 
 body {
@@ -249,23 +258,21 @@ body::after {
 
 /* ==================== 卡片悬浮效果 ==================== */
 .card-hover {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 300ms var(--ease-out-quart), box-shadow 300ms var(--ease-out-quart);
 }
 
 .card-hover:hover {
-  transform: translateY(-8px) scale(1.02);
+  transform: translateY(-4px);
   box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.5),
-    0 0 20px rgba(212, 175, 55, 0.1);
+    0 16px 36px rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(212, 175, 55, 0.1);
 }
 
 /* ==================== 输入框科技风格 ==================== */
 .tech-input {
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
+  transition: border-color 200ms var(--ease-out-quart), box-shadow 200ms var(--ease-out-quart), background 200ms var(--ease-out-quart);
 }
 
 .tech-input:focus {
@@ -287,9 +294,11 @@ body::after {
   border: 1px solid rgba(212, 175, 55, 0.4);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  transition: transform 160ms var(--ease-out-quart), background 200ms var(--ease-out-quart), border-color 200ms var(--ease-out-quart), box-shadow 200ms var(--ease-out-quart);
+}
+
+.tech-button:active {
+  transform: scale(0.97);
 }
 
 .tech-button::before {
@@ -478,9 +487,212 @@ body::after {
   }
 }
 
-/* 导航栏下方内容间距 */
-.navbar-offset {
-  padding-top: 80px;
+/* ==================== HUD 设计层（参考 resonance-hud 纪律） ====================
+ * 金色以"线"而非"面"出现；面板层级靠明度差而非阴影堆叠；
+ * 关键面板直角+切角，L 形角标只在聚焦/激活时点亮。
+ */
+:root {
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --gold-hair: rgba(212, 175, 55, 0.22);
+  --panel-0: rgba(12, 12, 16, 0.72);
+  --panel-1: rgba(20, 20, 26, 0.85);
+}
+
+/* 内容子面板：平色填充+发丝边，不用 backdrop-blur（卡内禁玻璃） */
+.panel {
+  background: var(--panel-0);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  position: relative;
+}
+
+.panel-gold {
+  border-color: var(--gold-hair);
+}
+
+/* HUD 主面板：切角 + 顶部金发丝线 */
+.hud-panel {
+  background: var(--panel-1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: var(--gold-hair);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  position: relative;
+}
+
+/* L 形四角角标：focus-within / .lit 时点亮 */
+.corner-brackets::before,
+.corner-brackets::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  opacity: 0.45;
+  transition: opacity 200ms var(--ease-out-quart), border-color 200ms var(--ease-out-quart);
+}
+
+.corner-brackets::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid rgba(212, 175, 55, 0.5);
+  border-left: 1px solid rgba(212, 175, 55, 0.5);
+}
+
+.corner-brackets::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.5);
+  border-right: 1px solid rgba(212, 175, 55, 0.5);
+}
+
+.corner-brackets:focus-within::before,
+.corner-brackets:focus-within::after,
+.corner-brackets.lit::before,
+.corner-brackets.lit::after {
+  opacity: 1;
+  border-color: #d4af37;
+}
+
+/* 双语区块头：编号 + 中文标题 + 英文小标 + 延伸发丝线 + 菱形节点 */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.section-head .index {
+  font-family: var(--font-rajdhani), 'Rajdhani', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.25em;
+  color: rgba(212, 175, 55, 0.75);
+}
+
+.section-head .rule {
+  flex: 1;
+  height: 1px;
+  align-self: center;
+  background: linear-gradient(90deg, var(--gold-hair) 0%, rgba(255, 255, 255, 0.06) 100%);
+  position: relative;
+}
+
+.section-head .rule::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2.5px;
+  width: 5px;
+  height: 5px;
+  background: rgba(212, 175, 55, 0.55);
+  transform: rotate(45deg);
+}
+
+/* 命运扫描线：一次性的金线扫过 */
+@keyframes scanSweep {
+
+  0% {
+    transform: translateX(-110%);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(110%);
+    opacity: 0;
+  }
+}
+
+.scanline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36%;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.12) 30%,
+      rgba(244, 229, 176, 0.35) 50%,
+      rgba(212, 175, 55, 0.12) 70%,
+      transparent 100%);
+  animation: scanSweep 900ms var(--ease-in-out-quart) forwards;
+}
+
+/* 结果区揭示：mount 即从左展开（纯 CSS，无 JS 依赖，任何环境可靠） */
+@keyframes revealClip {
+
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.4;
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+.reveal-in {
+  animation: revealClip 550ms var(--ease-out-quart) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-in {
+    animation: none;
+  }
+
+  .scanline {
+    display: none;
+  }
+}
+
+/* 抽卡卡片的纯 CSS 入场（替代 70 个 setTimeout） */
+@keyframes cardDeal {
+
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.deal-card {
+  animation: cardDeal 320ms var(--ease-out-quart) backwards;
+}
+
+.pull-card {
+  transition: transform 200ms var(--ease-out-quart);
+  /* 70 张卡：跳过视口外的渲染开销 */
+  content-visibility: auto;
+  contain-intrinsic-size: 80px 112px;
+}
+
+/* 卡片滚动区：滚动到边界不穿透页面 */
+.pull-scroll {
+  overscroll-behavior: contain;
+}
+
+/* 数字统计用等宽数字，避免数值变化时抖动 */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 触屏不启用悬停缩放（防粘滞 hover） */
+@media (hover: hover) and (pointer: fine) {
+
+  .pull-card:hover {
+    transform: scale(1.1);
+    z-index: 20;
+  }
 }
 
 /* ==================== 可访问性 ==================== */

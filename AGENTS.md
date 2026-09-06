@@ -40,7 +40,7 @@ lib/dailyLuck.ts    核心纯逻辑：本地日期工具、种子哈希、Seeded
 ## 约定
 
 - 文档、UI 文案、代码注释均以简体中文为主；组件文案带游戏化风格和 emoji（如 🌟 大吉）。
-- 视觉规范：深色主题、玻璃拟态卡片、金色发光强调色；全局样式集中在 `globals.css`，Tailwind 类内联使用。改配色/布局前先读 `.impeccable.md`（设计上下文与五条设计原则）；运势语义色只用 `ww-gold/ww-mint/ww-amber/ww-danger` 四档，不要引入裸 emerald/orange/red。
+- 视觉规范：深色主题、玻璃拟态卡片、金色发光强调色；全局样式集中在 `globals.css`，Tailwind 类内联使用。改配色/布局前先读 `.impeccable.md`（设计上下文与五条设计原则）；运势语义色只用 `ww-gold/ww-mint/ww-amber/ww-danger` 四档，不要引入裸 emerald/orange/red。2026-09-06 重设计后新增 HUD 设计层（`globals.css` 底部）：`hud-panel/corner-brackets/panel/section-head/reveal-in/scanline`——卡内子面板用平色 `.panel` 而非玻璃，玻璃只做顶层容器；金色以"线"而非"面"出现。
 - 音频/敏感日志约定不存在；不要往生产代码里加 console.log（仅 ShareCard 有一个 error 日志）。
 - **角色名与立绘**：模拟抽卡每日 `DAILY_PULL_COUNT = 70` 抽；角色名来自 `lib/dailyLuck.ts` 的三张卡池（UP 五星 / 常驻五星 / 四星），由独立于保底主随机流的辅助 RNG 分配——调整卡池内容不会改变出货序列。头像按 `public/characters/{slug}.png` 槽位加载（slug 对照表在同文件池定义中），缺图时 UI 自动用稀有度渐变占位，不会破图。
 

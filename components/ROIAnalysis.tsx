@@ -356,7 +356,7 @@ export default function ROIAnalysis({ score, luckyElement }: ROIAnalysisProps) {
 
                 {/* 主要指标 */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="glass-card-dark rounded-xl p-4 text-center">
+                    <div className="panel rounded-md p-4 text-center">
                         <p className="text-white/40 text-sm font-display mb-2">投入产出比</p>
                         <p className={`text-3xl font-bold font-display ${isHighROI ? 'gold-number' : isPositive ? 'text-ww-mint' : isLowROI ? 'text-ww-danger' : 'text-ww-amber'
                             }`}>
@@ -364,7 +364,7 @@ export default function ROIAnalysis({ score, luckyElement }: ROIAnalysisProps) {
                         </p>
                     </div>
 
-                    <div className="glass-card-dark rounded-xl p-4 text-center">
+                    <div className="panel rounded-md p-4 text-center">
                         <p className="text-white/40 text-sm font-display mb-2">风险等级</p>
                         <div className="flex items-center justify-center gap-2">
                             <div className={`w-3 h-3 rounded-full ${risk.color}`} />
@@ -372,7 +372,7 @@ export default function ROIAnalysis({ score, luckyElement }: ROIAnalysisProps) {
                         </div>
                     </div>
 
-                    <div className="glass-card-dark rounded-xl p-4 text-center">
+                    <div className="panel rounded-md p-4 text-center">
                         <p className="text-white/40 text-sm font-display mb-2">预期出货</p>
                         <p className={`text-2xl font-bold font-display ${getExpectedPullsColor()}`}>
                             <span className="text-base text-white/40 mr-1">约</span>{expectedPulls}<span className="text-base text-white/40 ml-1">抽</span>
@@ -413,7 +413,7 @@ export default function ROIAnalysis({ score, luckyElement }: ROIAnalysisProps) {
                     {locationData.locations.slice(0, locationsToShow).map((loc, idx) => (
                         <div
                             key={idx}
-                            className={`glass-card-dark rounded-xl p-4 ${idx === 0 ? 'border border-ww-gold/20' : ''
+                            className={`panel rounded-md p-4 ${idx === 0 ? 'border border-ww-gold/20' : ''
                                 }`}
                         >
                             <div className="flex items-start gap-4">
